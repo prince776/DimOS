@@ -1,0 +1,18 @@
+{
+  "configurations": [
+    {
+      "name": "Mac",
+      "includePath": ["${workspaceFolder}/**"],
+      "defines": [],
+      "macFrameworkPath": [
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+      ],
+      "compilerPath": "/usr/local/homebrew/bin/i686-elf-gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "macos-gcc-x86",
+      "configurationProvider": "ms-vscode.makefile-tools"
+    }
+  ],
+  "version": 4
+}
