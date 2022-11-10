@@ -1,6 +1,6 @@
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
+#include <stdint-gcc.h>
 #include <string.h>
 
 #include <kernel/tty.h>

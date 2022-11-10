@@ -6,6 +6,7 @@
     "string.h": "c",
     "stdio.h": "c",
     "tty.h": "c",
-    "stdlib.h": "c"
+    "stdlib.h": "c",
+    "descriptor_tables.h": "c"
   }
 }
