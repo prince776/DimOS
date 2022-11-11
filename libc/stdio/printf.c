@@ -5,11 +5,33 @@
 #include <string.h>
 
 static bool print(const char* data, size_t length) {
-	const unsigned char* bytes = (const unsigned char*) data;
+	const unsigned char* bytes = (const unsigned char*)data;
 	for (size_t i = 0; i < length; i++)
 		if (putchar(bytes[i]) == EOF)
 			return false;
 	return true;
+}
+
+static bool print_decimal(int val)
+{
+	char str[13];
+	str[12] = 0;
+	int pos = 11;
+	bool negative = val < 0;
+	if (val < 0) val *= -1;
+	while (pos >= 0)
+	{
+		str[pos] = '0' + (val % 10);
+		val /= 10;
+		if (val == 0) break;
+		pos--;
+	}
+	if (negative) {
+		str[--pos] = '-';
+	}
+
+	int res = printf(str + pos);
+	return res != -1;
 }
 
 int printf(const char* restrict format, ...) {
@@ -42,7 +64,7 @@ int printf(const char* restrict format, ...) {
 
 		if (*format == 'c') {
 			format++;
-			char c = (char) va_arg(parameters, int /* char promotes to int */);
+			char c = (char)va_arg(parameters, int /* char promotes to int */);
 			if (!maxrem) {
 				// TODO: Set errno to EOVERFLOW.
 				return -1;
@@ -50,7 +72,8 @@ int printf(const char* restrict format, ...) {
 			if (!print(&c, sizeof(c)))
 				return -1;
 			written++;
-		} else if (*format == 's') {
+		}
+		else if (*format == 's') {
 			format++;
 			const char* str = va_arg(parameters, const char*);
 			size_t len = strlen(str);
@@ -61,7 +84,19 @@ int printf(const char* restrict format, ...) {
 			if (!print(str, len))
 				return -1;
 			written += len;
-		} else {
+		}
+		else if (*format == 'd') {
+			format++;
+			int d = va_arg(parameters, int);
+			if (!maxrem) {
+				// TODO: Set errno to EOVERFLOW.
+				return -1;
+			}
+			if (!print_decimal(d))
+				return -1;
+			written++;
+		}
+		else {
 			format = format_begun_at;
 			size_t len = strlen(format);
 			if (maxrem < len) {

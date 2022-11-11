@@ -16,6 +16,13 @@ static size_t terminal_column;
 static uint8_t terminal_color;
 static uint16_t* terminal_buffer;
 
+void terminal_clear_row(size_t row)
+{
+	for (size_t x = 0; x < VGA_WIDTH; x++) {
+		const size_t index = row * VGA_WIDTH + x;
+		terminal_buffer[index] = vga_entry(' ', terminal_color);
+	}
+}
 void terminal_initialize(void) {
 	terminal_row = 0;
 	terminal_column = 0;
@@ -45,6 +52,7 @@ void terminal_putchar(char c) {
 		if (++terminal_row == VGA_HEIGHT) {
 			terminal_row = 0;
 		}
+		terminal_clear_row(terminal_row);
 		return;
 	}
 	terminal_putentryat(uc, terminal_color, terminal_column, terminal_row);
@@ -52,6 +60,7 @@ void terminal_putchar(char c) {
 		terminal_column = 0;
 		if (++terminal_row == VGA_HEIGHT)
 			terminal_row = 0;
+		terminal_clear_row(terminal_row);
 	}
 }
 

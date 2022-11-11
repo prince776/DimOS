@@ -1,12 +1,5 @@
 {
   "files.associations": {
-    "stdint.h": "c",
-    "stddef.h": "c",
-    "stdint-gcc.h": "c",
-    "string.h": "c",
-    "stdio.h": "c",
-    "tty.h": "c",
-    "stdlib.h": "c",
-    "descriptor_tables.h": "c"
+    "*.h": "c"
   }
 }

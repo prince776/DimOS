@@ -5,7 +5,8 @@
 
 void kernel_main(void) {
     terminal_initialize();
-    demo_stack_smashing("Small string");
-    demo_stack_smashing("a very big string string");
     printf("Hello, kernel World!\n");
+    asm volatile ("int $0x4");
+
+    while (1) {}
 }

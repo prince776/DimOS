@@ -12,7 +12,7 @@ uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 
 __attribute__((noreturn)) void __stack_chk_fail(void) {
 #if defined(__is_libk)
-    printf("Stack smashing deteced");
+    printf("Stack smashing detected");
     abort();
 #else
     abort();
