@@ -1,6 +1,2 @@
-#ifndef _KERNEL_DEMO_H
-#define _KERNEL_DEMO_H
-
+#pragma once
 void demo_stack_smashing(const char* str);
-
-#endif

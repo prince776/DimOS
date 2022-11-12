@@ -1,6 +1,4 @@
-#ifndef ARCH_I386_DESCRIPTOR_TABLES_H
-#define ARCH_I386_DESCRIPTOR_TABLES_H
-
+#pragma once
 #include <stdint-gcc.h>
 #include <string.h>
 
@@ -46,5 +44,3 @@ struct idt_ptr_struct
     uint32_t base;                // The address of the first element in our idt_entry_t array.
 } __attribute__((packed));
 typedef struct idt_ptr_struct idt_ptr_t;
-
-#endif

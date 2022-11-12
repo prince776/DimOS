@@ -1,5 +1,4 @@
-#ifndef KERNEL_COMMON_H
-#define KERNEL_COMMON_H
+#pragma once
 #ifdef __cplusplus
 extern "C"
 {
@@ -9,5 +8,4 @@ extern "C"
     void panic(const char* str);
 #ifdef __cplusplus
 }
-#endif
 #endif
