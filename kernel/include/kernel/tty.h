@@ -1,6 +1,4 @@
-#ifndef _KERNEL_TTY_H
-#define _KERNEL_TTY_H
-
+#pragma once
 #ifdef __cplusplus
 extern "C"
 {
@@ -15,5 +13,3 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-#endif
-
