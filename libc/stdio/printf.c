@@ -34,6 +34,22 @@ static bool print_decimal(int val)
 	return res != -1;
 }
 
+static bool print_unsigned_decimal(unsigned int val)
+{
+	char str[13];
+	str[12] = 0;
+	int pos = 11;
+	while (pos >= 0)
+	{
+		str[pos] = '0' + (val % 10);
+		val /= 10;
+		if (val == 0) break;
+		pos--;
+	}
+	int res = printf(str + pos);
+	return res != -1;
+}
+
 int printf(const char* restrict format, ...) {
 	va_list parameters;
 	va_start(parameters, format);
@@ -93,6 +109,17 @@ int printf(const char* restrict format, ...) {
 				return -1;
 			}
 			if (!print_decimal(d))
+				return -1;
+			written++;
+		}
+		else if (*format == 'u') {
+			format++;
+			unsigned int d = (unsigned int)va_arg(parameters, int);
+			if (!maxrem) {
+				// TODO: Set errno to EOVERFLOW.
+				return -1;
+			}
+			if (!print_unsigned_decimal(d))
 				return -1;
 			written++;
 		}

@@ -26,6 +26,11 @@ stack_top:
 _start:
 	movl $stack_top, %esp
 
+	# Call kernel early with grub multiboot info
+	push %eax
+	push %ebx
+	call kernel_early
+
 	# Setup descriptor tables
 	call init_descriptor_tables
 
