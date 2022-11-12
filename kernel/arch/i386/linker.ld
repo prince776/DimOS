@@ -34,8 +34,11 @@ SECTIONS
 	/* Read-write data (uninitialized) and stack */
 	.bss BLOCK(4K) : ALIGN(4K)
 	{
-		*(COMMON)
-		*(.bss)
+        sbss = .;
+        *(COMMON)
+        *(.bss)
+        ebss = .;
+		kernel_end = .;
 	}
 
 	/* The compiler may produce other sections, put them in the proper place in

@@ -32,6 +32,7 @@ $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
 kernel/demo/demo.o \
 kernel/isr.o \
+kernel/kheap.o \
 
 OBJS=\
 $(ARCHDIR)/crti.o \
