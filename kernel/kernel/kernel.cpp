@@ -3,19 +3,19 @@
 #include <stdint-gcc.h>
 #include <kernel/multiboot.h>
 #include <kernel/common.h>
-#include <kernel/demo/demo.h>
+#include <demo/demo.h>
 
 multiboot_info_t* mbd;
 unsigned int grub_checkvalue;
 extern uintptr_t kernel_start;
 extern uintptr_t kernel_end;
 
-void kernel_early(multiboot_info_t* _mbd, unsigned int magic) {
+extern "C" void kernel_early(multiboot_info_t * _mbd, unsigned int magic) {
     mbd = _mbd;
     grub_checkvalue = magic;
 }
 
-void kernel_main(void) {
+extern "C" void kernel_main(void) {
     terminal_initialize();
     printf("Hello, kernel World!\n");
 
