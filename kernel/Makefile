@@ -23,7 +23,7 @@ ARCHDIR=arch/$(HOSTARCH)
 include $(ARCHDIR)/make.config
 
 CFLAGS:=$(CFLAGS) $(KERNEL_ARCH_CFLAGS)
-CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS)
+CPPFLAGS:=$(CPPFLAGS) $(KERNEL_ARCH_CPPFLAGS) -DPMMLOG
 LDFLAGS:=$(LDFLAGS) $(KERNEL_ARCH_LDFLAGS)
 LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
@@ -34,6 +34,7 @@ kernel/demo/demo.o \
 kernel/isr.o \
 kernel/common.o \
 kernel/supcpp.o \
+kernel/memory/pmm.o \
 
 OBJS=\
 $(ARCHDIR)/crti.o \

@@ -4,6 +4,7 @@
 #include <kernel/multiboot.h>
 #include <kernel/common.h>
 #include <demo/demo.h>
+#include <kernel/memory/pmm.h>
 
 multiboot_info_t* mbd;
 unsigned int grub_checkvalue;
@@ -17,8 +18,6 @@ extern "C" void kernel_early(multiboot_info_t * _mbd, unsigned int magic) {
 
 extern "C" void kernel_main(void) {
     terminal_initialize();
-    printf("Hello, kernel World!\n");
-
 
     if (grub_checkvalue != MULTIBOOT_BOOTLOADER_MAGIC) {
         panic("invalid magic number!");
@@ -26,14 +25,17 @@ extern "C" void kernel_main(void) {
     if (!(mbd->flags >> 6 & 0x1)) {
         panic("invalid memory map given by GRUB bootloader");
     }
+
     printf("System memory map:\n");
+    printf("--------------------------------------------------\n");
+    uint32_t availRamStart, availRamSize, totalRamSize = 0;
     for (int i = 0; i < mbd->mmap_length; i += sizeof(multiboot_memory_map_t)) {
         multiboot_memory_map_t* mmmt =
             (multiboot_memory_map_t*)(mbd->mmap_addr + i);
 
         printf("Start Addr: %u,%u | Length: %u,%u | Size: %u | Type: %u\n",
             mmmt->addr_high, mmmt->addr_low, mmmt->len_high, mmmt->len_low, mmmt->size, mmmt->type);
-
+        totalRamSize += mmmt->len_low;
         if (mmmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
             /*
              * Do something with this memory block!
@@ -41,10 +43,21 @@ extern "C" void kernel_main(void) {
              * actively being used by the kernel! You'll need to take that
              * into account before writing to memory!
              */
+            if (mmmt->addr_low + mmmt->len_low < (uint32_t)&kernel_end) // skip (< 1Mb areas)
+                continue;
+            availRamStart = mmmt->addr_low;
+            availRamSize = mmmt->len_low;
         }
     }
-    printf("Kernel start memory:%u\n", &kernel_start);
-    printf("Kernel end memory:%u\n", &kernel_end);
+    printf("--------------------------------------------------\n");
+    printf("Kernel memory range: [%u, %u)\n", &kernel_start, &kernel_end);
+    printf("Total RAM: [0, %u)\n", totalRamSize);
+    printf("Available ram range: [%u, %u)\n", availRamStart, availRamStart + availRamSize);
+    printf("--------------------------------------------------\n");
 
+    PMM pmm(totalRamSize, &kernel_end);
+
+    void* testFrame = pmm.allocFrame();
+    printf("Allocated memory: %u\n", testFrame);
     panic("Nothing to do");
 }
