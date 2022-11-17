@@ -5,6 +5,7 @@
 using PhysicalAddr = uint32_t;
 
 class PMM {
+public:
     static constexpr int framesPerByte = 8;
     static constexpr int framesPerElement = 32;
     static constexpr int frameSize = 4096;
@@ -32,6 +33,8 @@ public:
     inline int elementCnt() {
         return frameCnt / framesPerElement;
     }
+
+    inline PhysicalAddr getFrameAddr(int frame) { return (frame << 12); }
 
     inline PhysicalAddr endMemory() { return (PhysicalAddr)bitmap + elementCnt(); }
     int firstFreeFrame();

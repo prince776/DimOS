@@ -5,6 +5,7 @@
 #include <kernel/common.h>
 #include <demo/demo.h>
 #include <kernel/memory/pmm.h>
+#include <kernel/memory/vmm.h>
 
 multiboot_info_t* mbd;
 unsigned int grub_checkvalue;
@@ -55,9 +56,12 @@ extern "C" void kernel_main(void) {
     printf("Available ram range: [%u, %u)\n", availRamStart, availRamStart + availRamSize);
     printf("--------------------------------------------------\n");
 
-    PMM pmm(totalRamSize, &kernel_end, availRamStart + availRamSize);
+    PMM pmm(availRamStart + availRamSize, &kernel_end, availRamStart + availRamSize);
 
     void* testFrame = pmm.allocFrame();
     printf("Allocated memory: %u\n", testFrame);
+
+    VMM vmm(pmm);
+
     panic("Nothing to do");
 }
