@@ -55,7 +55,7 @@ extern "C" void kernel_main(void) {
     printf("Available ram range: [%u, %u)\n", availRamStart, availRamStart + availRamSize);
     printf("--------------------------------------------------\n");
 
-    PMM pmm(totalRamSize, &kernel_end);
+    PMM pmm(totalRamSize, &kernel_end, availRamStart + availRamSize);
 
     void* testFrame = pmm.allocFrame();
     printf("Allocated memory: %u\n", testFrame);

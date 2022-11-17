@@ -15,7 +15,7 @@ class PMM {
 
 public:
     // kernel_end_mem MUST be 4K aligned
-    PMM(uint32_t memSize, uint32_t* kernel_end_mem);
+    PMM(uint32_t memSize, uint32_t* kernel_end_mem, uint32_t ramEnd);
 
     inline void bitmapSet(int bit) {
         bitmap[bit / framesPerElement] |= (1 << (bit % framesPerElement));
@@ -33,6 +33,7 @@ public:
         return frameCnt / framesPerElement;
     }
 
+    inline PhysicalAddr endMemory() { return (PhysicalAddr)bitmap + elementCnt(); }
     int firstFreeFrame();
     // int firstNFreeFrames(int n);
 

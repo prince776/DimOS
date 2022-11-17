@@ -8,16 +8,15 @@
 #define LOG(...)
 #endif
 
-PMM::PMM(uint32_t memSize, uint32_t* kernel_end_mem)
+PMM::PMM(uint32_t memSize, uint32_t* kernel_end_mem, uint32_t ramEnd)
     : memorySize(memSize) {
     frameCnt = this->memorySize / frameSize;
     bitmap = kernel_end_mem;
 
     // all memory unavilable initially
     deinitRegion(0, memSize);
-    // initialize memory from [bitmap_end, ramend]
-    PhysicalAddr bitmap_end = (PhysicalAddr)bitmap + elementCnt();
-    initRegion(bitmap_end, memSize - bitmap_end);
+    // initialize memory from [bitmap_end, ramend)
+    initRegion(endMemory(), ramEnd - endMemory());
 }
 
 
