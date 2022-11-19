@@ -75,5 +75,4 @@ isr_common_stub:
 	pop %eax
 
 	add $8, %esp
-
 	iret

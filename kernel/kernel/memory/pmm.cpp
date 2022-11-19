@@ -62,6 +62,21 @@ int PMM::firstFreeFrame() {
     return -1;
 }
 
+int PMM::firstNFreeFrames(int n) {
+    if (n > elementCnt()) return -1;
+    int free = 0, i = 0;
+    for (; i < n; i++) {
+        free += !bitmapIsSet(i);
+    }
+    for (; i < elementCnt() * framesPerElement; i++) {
+        if (free == n) return i - n;
+        free += !bitmapIsSet(i);
+        free -= !bitmapIsSet(i - n);
+    }
+    if (free == n) return i - n;
+    return -1;
+}
+
 void* PMM::allocFrame() {
     if (usedframes == frameCnt)
         return 0;
@@ -76,11 +91,27 @@ void* PMM::allocFrame() {
     return (void*)addr;
 }
 
+void* PMM::allocNFrames(int n) {
+    if (usedframes + n >= frameCnt)
+        return 0;
+    int frame = firstNFreeFrames(n);
+    if (frame == -1)
+        return 0;
+
+    LOG("[PMM] Allocating %d frames starting at: %d\n", n, frame);
+    for (int i = 0; i < n; i++) {
+        bitmapSet(frame + i);
+        usedframes++;
+    }
+    PhysicalAddr addr = frame * frameSize;
+    return (void*)addr;
+}
+
 void PMM::freeFrame(void* addr) {
     PhysicalAddr paddr = (PhysicalAddr)addr;
     int frame = paddr / frameSize;
-
-    if (bitmapIsSet(frame)) return;
+    LOG("Freeing frame: %d\n", frame);
+    if (!bitmapIsSet(frame)) return;
 
     bitmapUnset(frame);
     usedframes--;

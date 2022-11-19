@@ -3,6 +3,8 @@
 #include <stdint-gcc.h>
 #include <kernel/memory/pmm.h>
 
+using VirtualAddr = uint32_t;
+
 //////////////////////////////////////// Page Table Entry ////////////////////////////////////////
 
 enum PTEAttrib {
@@ -16,7 +18,10 @@ enum PTEAttrib {
     I86_PTE_PAT = 0x80,		//0000000000000000000000010000000
     I86_PTE_CPU_GLOBAL = 0x100,		//0000000000000000000000100000000
     I86_PTE_LV4_GLOBAL = 0x200,		//0000000000000000000001000000000
-    I86_PTE_FRAME = 0x7FFFF000 	//1111111111111111111000000000000
+    I86_PTE_FRAME = 0x7FFFF000, 	//1111111111111111111000000000000
+
+    // CUSTOM FLAGS
+    I86_PTE_USABLE = 0x400, //0000000000000000000010000000000
 };
 using PTEntry = uint32_t;
 
@@ -27,6 +32,7 @@ namespace pte {
     inline void setFrame(PTEntry* e, PhysicalAddr addr) { *e = (*e & ~I86_PTE_FRAME) | addr; }
     inline bool isPresent(PTEntry e) { return e & I86_PTE_PRESENT; }
     inline bool isWriteable(PTEntry e) { return e & I86_PTE_WRITABLE; }
+    inline bool isUsable(PTEntry e) { return e & I86_PTE_USABLE; }
     inline PhysicalAddr getPhysicalAddr(PTEntry e) { return e & I86_PTE_FRAME; }
 };
 
@@ -64,21 +70,24 @@ namespace pde {
 struct PageTable {
     inline static constexpr int entryCnt = 1024;
     PTEntry entries[entryCnt];
-
-    PageTable() {
-        for (int i = 0; i < entryCnt; i++)
+    void Init() {
+        for (int i = 0; i < entryCnt; i++) {
             entries[i] = pte::defaultVal;
+        }
     }
 };
 
 //////////////////////////////////////// PAGE DIRECTORY ////////////////////////////////////////
 
-struct PageDirectory {
+struct __attribute__((packed)) PageDirectory {
     inline static constexpr int entryCnt = 1024;
     PDEntry entries[entryCnt];
+    VirtualAddr vAddrs[entryCnt];
 
-    PageDirectory() {
-        for (int i = 0; i < entryCnt; i++)
+    void Init() {
+        for (int i = 0; i < entryCnt; i++) {
             entries[i] = pde::defaultVal;
+            vAddrs[i] = 0;
+        }
     }
 };
