@@ -38,11 +38,12 @@ public:
 
     inline PhysicalAddr endMemory() { return (PhysicalAddr)bitmap + elementCnt(); }
     int firstFreeFrame();
-    // int firstNFreeFrames(int n);
+    int firstNFreeFrames(int n);
 
     void initRegion(PhysicalAddr start, uint32_t size);
     void deinitRegion(PhysicalAddr start, uint32_t size);
 
     void* allocFrame();
+    void* allocNFrames(int n);
     void freeFrame(void* addr);
 };

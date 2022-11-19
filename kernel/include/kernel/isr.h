@@ -20,3 +20,8 @@ struct stack_state {
     uint32_t cs;
     uint32_t eflags;
 } __attribute__((packed));
+
+
+typedef void (*isr_handler_t)(struct cpu_state cpu, uint32_t interrupt, struct stack_state stack);
+void register_interrupt_handler(uint8_t n, isr_handler_t handler);
+void page_fault_handler(cpu_state cpu, uint32_t interrupt, stack_state stack);

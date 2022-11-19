@@ -28,14 +28,14 @@ extern "C" void kernel_main(void) {
     }
 
     printf("System memory map:\n");
-    printf("--------------------------------------------------\n");
+    // printf("--------------------------------------------------\n");
     uint32_t availRamStart, availRamSize, totalRamSize = 0;
     for (int i = 0; i < mbd->mmap_length; i += sizeof(multiboot_memory_map_t)) {
         multiboot_memory_map_t* mmmt =
             (multiboot_memory_map_t*)(mbd->mmap_addr + i);
 
-        printf("Start Addr: %u,%u | Length: %u,%u | Size: %u | Type: %u\n",
-            mmmt->addr_high, mmmt->addr_low, mmmt->len_high, mmmt->len_low, mmmt->size, mmmt->type);
+        // printf("Start Addr: %u,%u | Length: %u,%u | Size: %u | Type: %u\n",
+        //     mmmt->addr_high, mmmt->addr_low, mmmt->len_high, mmmt->len_low, mmmt->size, mmmt->type);
         totalRamSize += mmmt->len_low;
         if (mmmt->type == MULTIBOOT_MEMORY_AVAILABLE) {
             /*
@@ -62,6 +62,17 @@ extern "C" void kernel_main(void) {
     printf("Allocated memory: %u\n", testFrame);
 
     VMM vmm(pmm);
+    int* x;
+    for (int i = 0; i < 3; i++)
+    {
+        x = (int*)vmm.allocPage();
+        *x = 123435467;
+        printf("Some data I have at addr: %d is: %d\n", x, *x);
+        vmm.freePage(x);
+    }
+    printf("[Should Page Fault] Some data I have at addr: %d is: %d\n", x, *x);
 
+    // int* x = (int*)10000000;
+    // printf("Trying: %d\n", *x);
     panic("Nothing to do");
 }

@@ -4,7 +4,15 @@
 #include <kernel/memory/pmm.h>
 #include <kernel/memory/paging.h>
 
-using VirtualAddr = uint32_t;
+
+struct PageInfo {
+    PTEntry* pte;
+    int pdIdx, ptIdx;
+
+    VirtualAddr getVirtualAddr() const {
+        return ((pdIdx << 22) | (ptIdx << 12));
+    }
+};
 
 class VMM {
     static constexpr int pagesPerTable = 1024;
@@ -14,7 +22,9 @@ class VMM {
 
     PageDirectory* dir;
     PMM& pmm;
+    int freePages = 0; // with every new page table added, freePages += pagesPerTable, with every page allocated, freePages-- 
 public:
+
     // Enable paging and identity map the current used page frames
     VMM(PMM& pmm);
 
@@ -26,7 +36,14 @@ public:
     inline PageDirectory* getDir() { return dir; }
 
     // pt routines
-    // bool allocPage(PTEntry* entry);
-    // bool freePage(PTEntry* entry);
+    void* allocPage();
+    void assignFrameToPage(PTEntry* entry, PhysicalAddr frameAddr);
+    void freePage(void* ptr);
+
+    PageInfo firstFreePage();
+
+    inline void invlpg(VirtualAddr addr) {
+        asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
+    }
 
 };
