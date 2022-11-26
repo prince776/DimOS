@@ -36,6 +36,7 @@ kernel/common.o \
 kernel/supcpp.o \
 kernel/memory/pmm.o \
 kernel/memory/vmm.o \
+kernel/memory/heap.o \
 
 OBJS=\
 $(ARCHDIR)/crti.o \
