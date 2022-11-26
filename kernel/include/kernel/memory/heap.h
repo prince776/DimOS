@@ -18,6 +18,7 @@ namespace Heap {
         void* alloc(uint32_t size);
         void addMemory(VirtualAddr addr, uint32_t size);
         void free(void* ptr);
+        void print();
     private:
         // returns the other part of memory
         Node* split(Node* node, uint32_t size);

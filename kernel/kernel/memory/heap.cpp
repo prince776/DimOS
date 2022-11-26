@@ -4,6 +4,7 @@
 namespace Heap {
 
     FreeList::FreeList(VirtualAddr addr, uint32_t size) {
+        head = nullptr;
         addMemory(addr, size);
     }
 
@@ -68,6 +69,7 @@ namespace Heap {
     void FreeList::addMemory(VirtualAddr addr, uint32_t size) {
         Node* newNode = (Node*)addr;
         newNode->size = size - sizeofNode;
+        newNode->next = nullptr;
         addNode(newNode);
     }
 
@@ -81,5 +83,16 @@ namespace Heap {
         Node* splitPart = (Node*)((uint32_t)node + sizeofNode + size);
         splitPart->size = node->size - size - sizeofNode;
         return splitPart;
+    }
+
+    void FreeList::print() {
+        Node* curr = head;
+        printf("-----------\n");
+        printf("FREELIST:\n");
+        while (curr != nullptr) {
+            printf("Node at: %u, sz: %u, next: %u\n", curr, curr->size, curr->next);
+            curr = curr->next;
+        }
+        printf("-----------\n");
     }
 }

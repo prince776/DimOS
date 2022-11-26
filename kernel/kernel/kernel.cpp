@@ -57,22 +57,25 @@ extern "C" void kernel_main(void) {
     printf("Available ram range: [%u, %u)\n", availRamStart, availRamStart + availRamSize);
     printf("--------------------------------------------------\n");
 
-    PMM pmm(availRamStart + availRamSize, &kernel_end, availRamStart + availRamSize);
+    PMM::get().init(availRamStart + availRamSize, &kernel_end, availRamStart + availRamSize);
 
-    void* testFrame = pmm.allocFrame();
+    void* testFrame = PMM::get().allocFrame();
     printf("Allocated memory: %u\n", testFrame);
 
-    VMM vmm(pmm);
-    void* newPage = vmm.allocPage();
+    VMM::get().init();
+    void* newPage = VMM::get().allocPage();
+    printf("New Page is at: %u\n", newPage);
+
     Heap::FreeList heap((VirtualAddr)newPage, VMM::pageSize);
 
     int* ptr = (int*)heap.alloc(sizeof(int));
+    heap.print();
     *ptr = 5;
-    printf("Some data I have at addr: %d is: %d\n", ptr, *ptr);
+    printf("Some data I have at addr: %u is: %d\n", ptr, *ptr);
     heap.free(ptr);
     ptr = (int*)heap.alloc(sizeof(int));
     *ptr = 10;
-    printf("Some data I have at addr: %d is: %d\n", ptr, *ptr);
+    printf("Some data I have at addr: %u is: %d\n", ptr, *ptr);
 
     panic("Nothing to do");
 }

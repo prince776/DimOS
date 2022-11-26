@@ -23,12 +23,20 @@ public:
 
 private:
     PageDirectory* dir;
-    PMM& pmm;
     int freePages = 0; // with every new page table added, freePages += pagesPerTable, with every page allocated, freePages-- 
-public:
 
+private:
+    VMM() {}
+    VMM(const VMM&);
+    void operator=(const VMM&);
+
+public:
+    static VMM& get() {
+        static VMM vmm;
+        return vmm;
+    }
     // Enable paging and identity map the current used page frames
-    VMM(PMM& pmm);
+    void init();
 
     inline int getPdIdx(VirtualAddr x) const { return (((x) >> 22) & 0x3ff); }
     inline int getPtIdx(VirtualAddr x) const { return (((x) >> 12) & 0x3ff); }

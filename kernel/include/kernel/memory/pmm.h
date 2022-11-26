@@ -14,9 +14,18 @@ public:
     uint32_t memorySize, usedframes, frameCnt;
     uint32_t* bitmap;
 
+private:
+    PMM() {}
+    PMM(const PMM&);
+    void operator=(const PMM&);
 public:
+    static PMM& get() {
+        static PMM pmm;
+        return pmm;
+    }
+
     // kernel_end_mem MUST be 4K aligned
-    PMM(uint32_t memSize, uint32_t* kernel_end_mem, uint32_t ramEnd);
+    void init(uint32_t memSize, uint32_t* kernel_end_mem, uint32_t ramEnd);
 
     inline void bitmapSet(int bit) {
         bitmap[bit / framesPerElement] |= (1 << (bit % framesPerElement));

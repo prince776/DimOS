@@ -6,8 +6,8 @@
 extern "C" void loadPageDirectory(unsigned int*);
 extern "C" void enablePaging();
 
-VMM::VMM(PMM& pmm)
-    : pmm(pmm) {
+void VMM::init() {
+    auto& pmm = PMM::get();
     dir = (PageDirectory*)pmm.allocNFrames(2);
     (*dir).Init();
 
@@ -40,9 +40,9 @@ VMM::VMM(PMM& pmm)
         freePages--;
     }
 
+    register_interrupt_handler(14, page_fault_handler);
     switchDir(dir);
     enablePaging();
-    register_interrupt_handler(14, page_fault_handler);
 }
 
 bool VMM::switchDir(PageDirectory* dir) {
@@ -58,7 +58,7 @@ void* VMM::allocPage() {
     if (!freePage.pte) {
         panic("OUT OF PHYSICAL MEMORY");
     }
-    PhysicalAddr freeFrame = (PhysicalAddr)pmm.allocFrame();
+    PhysicalAddr freeFrame = (PhysicalAddr)PMM::get().allocFrame();
 
     if (freePages == 1) { // can't use this one up, otherwise we can't allocate a new page for storing next page table
         assignFrameToPage(freePage.pte, freeFrame);
@@ -121,7 +121,7 @@ void VMM::freePage(void* ptr) {
     PageTable* pt = (PageTable*)dir->vAddrs[page.pdIdx];
     page.pte = (PTEntry*)&pt->entries[page.ptIdx];
 
-    pmm.freeFrame((void*)pte::getPhysicalAddr(*page.pte));
+    PMM::get().freeFrame((void*)pte::getPhysicalAddr(*page.pte));
     *page.pte = pte::defaultVal;
     freePages++;
     invlpg(page.getVirtualAddr());

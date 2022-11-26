@@ -8,24 +8,23 @@
 #define LOG(...)
 #endif
 
-PMM::PMM(uint32_t memSize, uint32_t* kernel_end_mem, uint32_t ramEnd)
-    : memorySize(memSize) {
-    frameCnt = this->memorySize / frameSize;
+void PMM::init(uint32_t memSize, uint32_t* kernel_end_mem, uint32_t ramEnd) {
+    memorySize = memSize;
+    frameCnt = memorySize / frameSize;
     bitmap = kernel_end_mem;
 
     // all memory unavilable initially
-    deinitRegion(0, memSize);
+    deinitRegion(0, memorySize);
+    usedframes = frameCnt;
     // initialize memory from [bitmap_end, ramend)
-    initRegion(endMemory(), ramEnd - endMemory());
+    initRegion((PhysicalAddr)endMemory(), ramEnd - endMemory());
 }
-
 
 void PMM::initRegion(PhysicalAddr start, uint32_t size) {
     LOG("[PMM] Initializing Physical memory region: [%u, %u)\n", start, start + size);
 
     int frameSt = (start + frameSize - 1) / frameSize;
     int cnt = (size + frameSize - 1) / frameSize;
-
     while (cnt-- > 0) {
         bool wasSet = bitmapIsSet(frameSt);
         bitmapUnset(frameSt++);
