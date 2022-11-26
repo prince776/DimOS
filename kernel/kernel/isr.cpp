@@ -3,11 +3,11 @@
 #include <stdio.h>
 #include <kernel/common.h>
 
-isr_handler_t interrupt_handlers[256];
+interrupt_handler_t interrupt_handlers[256];
 
-extern "C" void isr_handler(struct cpu_state cpu, uint32_t interrupt, struct stack_state stack) {
+extern "C" void isr_handler(cpu_state cpu, uint32_t interrupt, stack_state stack) {
     if (interrupt_handlers[interrupt] != 0) {
-        isr_handler_t handler = interrupt_handlers[interrupt];
+        interrupt_handler_t handler = interrupt_handlers[interrupt];
         handler(cpu, interrupt, stack);
     }
     else {
@@ -15,7 +15,7 @@ extern "C" void isr_handler(struct cpu_state cpu, uint32_t interrupt, struct sta
     }
 }
 
-void register_interrupt_handler(uint8_t n, isr_handler_t handler) {
+void register_interrupt_handler(uint8_t n, interrupt_handler_t handler) {
     interrupt_handlers[n] = handler;
 }
 

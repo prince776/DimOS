@@ -110,7 +110,7 @@ void* PMM::allocNFrames(int n) {
 void PMM::freeFrame(void* addr) {
     PhysicalAddr paddr = (PhysicalAddr)addr;
     int frame = paddr / frameSize;
-    LOG("Freeing frame: %d\n", frame);
+    LOG("[PMM] Freeing frame: %d\n", frame);
     if (!bitmapIsSet(frame)) return;
 
     bitmapUnset(frame);

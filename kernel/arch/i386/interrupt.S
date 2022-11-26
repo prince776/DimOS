@@ -20,6 +20,14 @@ idt_flush:
     jmp isr_common_stub
 .endm
 
+.macro IRQ irq_num, isr_code
+  .global irq\irq_num
+  irq\irq_num:
+    push $0
+    push $\isr_code
+    jmp isr_common_stub
+.endm
+
 ISR_NOERRCODE 0
 ISR_NOERRCODE 1
 ISR_NOERRCODE 2
@@ -52,6 +60,23 @@ ISR_NOERRCODE 28
 ISR_NOERRCODE 29
 ISR_ERRCODE 30
 ISR_NOERRCODE 31
+
+IRQ   0,    32
+IRQ   1,    33
+IRQ   2,    34
+IRQ   3,    35
+IRQ   4,    36
+IRQ   5,    37
+IRQ   6,    38
+IRQ   7,    39
+IRQ   8,    40
+IRQ   9,    41
+IRQ  10,    42
+IRQ  11,    43
+IRQ  12,    44
+IRQ  13,    45
+IRQ  14,    46
+IRQ  15,    47
 
 .extern isr_handler
 
