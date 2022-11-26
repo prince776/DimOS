@@ -15,11 +15,13 @@ struct PageInfo {
 };
 
 class VMM {
+public:
     static constexpr int pagesPerTable = 1024;
     static constexpr int tablesPerDir = 1024;
     static constexpr int pageSize = 4096;
     static constexpr int pageAlignment = 4096;
 
+private:
     PageDirectory* dir;
     PMM& pmm;
     int freePages = 0; // with every new page table added, freePages += pagesPerTable, with every page allocated, freePages-- 

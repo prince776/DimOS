@@ -6,6 +6,7 @@
 #include <demo/demo.h>
 #include <kernel/memory/pmm.h>
 #include <kernel/memory/vmm.h>
+#include <kernel/memory/heap.h>
 
 multiboot_info_t* mbd;
 unsigned int grub_checkvalue;
@@ -62,17 +63,16 @@ extern "C" void kernel_main(void) {
     printf("Allocated memory: %u\n", testFrame);
 
     VMM vmm(pmm);
-    int* x;
-    for (int i = 0; i < 3; i++)
-    {
-        x = (int*)vmm.allocPage();
-        *x = 123435467;
-        printf("Some data I have at addr: %d is: %d\n", x, *x);
-        vmm.freePage(x);
-    }
-    printf("[Should Page Fault] Some data I have at addr: %d is: %d\n", x, *x);
+    void* newPage = vmm.allocPage();
+    Heap::FreeList heap((VirtualAddr)newPage, VMM::pageSize);
 
-    // int* x = (int*)10000000;
-    // printf("Trying: %d\n", *x);
+    int* ptr = (int*)heap.alloc(sizeof(int));
+    *ptr = 5;
+    printf("Some data I have at addr: %d is: %d\n", ptr, *ptr);
+    heap.free(ptr);
+    ptr = (int*)heap.alloc(sizeof(int));
+    *ptr = 10;
+    printf("Some data I have at addr: %d is: %d\n", ptr, *ptr);
+
     panic("Nothing to do");
 }
