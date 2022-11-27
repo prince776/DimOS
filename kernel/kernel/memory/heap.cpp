@@ -9,7 +9,7 @@ namespace Heap {
     }
 
     void* FreeList::alloc(uint32_t size) {
-        Node* curr = head, * target = nullptr, * prev, * prevNode;
+        Node* curr = head, * target = nullptr, * prev = nullptr, * prevNode = nullptr;
         int32_t usedSize = INT32_MAX;
         while (curr != nullptr) {
             if (curr->size >= size && curr->size < usedSize) {
@@ -20,7 +20,13 @@ namespace Heap {
             prevNode = curr;
             curr = curr->next;
         }
-        if (target == nullptr) return nullptr;
+        if (target == nullptr) {
+            // ask for more memory from vmm
+            int reqPages = (size + sizeofNode + VMM::pageSize - 1) / VMM::pageSize;
+            void* addr = VMM::get().allocNPages(reqPages);
+            addMemory((VirtualAddr)addr, reqPages * VMM::pageSize);
+            return alloc(size); // retry
+        }
         Node* splitPart = split(target, size);
         if (splitPart != nullptr) {
             if (prev != nullptr) {
@@ -30,6 +36,7 @@ namespace Heap {
                 head = splitPart;
             }
             splitPart->next = target->next;
+            target->size = size;
         }
         else {
             if (prev != nullptr) {
@@ -45,7 +52,7 @@ namespace Heap {
     void FreeList::addNode(Node* newNode) {
         Node* curr = head, * prev = nullptr;
         while (curr != nullptr && curr <= newNode) {
-            if ((uint32_t)curr + sizeofNode + curr->size == (uint32_t)newNode) { // it can be coalesced into curr
+            if ((uint32_t)curr + sizeofNode + curr->size == (uint32_t)newNode) { // it can be coalesced into curr from front
                 curr->size += sizeofNode + newNode->size;
                 Node* next = curr->next;
                 if ((uint32_t)next == (uint32_t)curr + sizeofNode + curr->size) { // next can be coalesced into curr
@@ -57,13 +64,22 @@ namespace Heap {
             prev = curr;
             curr = curr->next;
         }
+        newNode->next = curr;
         if (prev) {
             prev->next = newNode;
         }
         else {
             head = newNode;
         }
-        newNode->next = curr;
+        if ((uint32_t)newNode + sizeofNode + newNode->size == (uint32_t)curr) { // it can be coalesced into curr from back
+            newNode->size += sizeofNode + curr->size;
+            newNode->next = curr->next;
+            Node* next = curr->next;
+            if ((uint32_t)newNode + sizeofNode + newNode->size == (uint32_t)next) {
+                newNode->size += sizeofNode + next->size;
+                newNode->next = next->next;
+            }
+        }
     }
 
     void FreeList::addMemory(VirtualAddr addr, uint32_t size) {
@@ -82,17 +98,21 @@ namespace Heap {
         if (node->size < size + sizeofNode + 1) return nullptr;
         Node* splitPart = (Node*)((uint32_t)node + sizeofNode + size);
         splitPart->size = node->size - size - sizeofNode;
+        splitPart->next = nullptr;
         return splitPart;
     }
 
     void FreeList::print() {
         Node* curr = head;
-        printf("-----------\n");
-        printf("FREELIST:\n");
+        printf("------FREELIST----\n");
         while (curr != nullptr) {
-            printf("Node at: %u, sz: %u, next: %u\n", curr, curr->size, curr->next);
+            curr->print();
             curr = curr->next;
         }
-        printf("-----------\n");
+        printf("------------------\n");
+    }
+
+    void Node::print() {
+        printf("Node at: %u, sz: %u, next: %u\n", this, size, next);
     }
 }

@@ -40,9 +40,9 @@ void VMM::init() {
         freePages--;
     }
 
-    register_interrupt_handler(14, page_fault_handler);
     switchDir(dir);
     enablePaging();
+    register_interrupt_handler(14, page_fault_handler);
 }
 
 bool VMM::switchDir(PageDirectory* dir) {
@@ -83,6 +83,17 @@ void* VMM::allocPage() {
 
     assignFrameToPage(freePage.pte, freeFrame);
     return (void*)freePage.getVirtualAddr();
+}
+
+// TODO: It probably would need to be updated when we would start freeing pages
+// For now, the use case is not happening, so we can just trivially do this.
+void* VMM::allocNPages(int n) {
+    void* firstPage = allocPage();
+    n--;
+    while (n-- > 0) {
+        allocPage();
+    }
+    return firstPage;
 }
 
 void VMM::assignFrameToPage(PTEntry* e, PhysicalAddr frameAddr) {

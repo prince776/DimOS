@@ -47,6 +47,7 @@ public:
 
     // pt routines
     void* allocPage();
+    void* allocNPages(int n);
     void assignFrameToPage(PTEntry* entry, PhysicalAddr frameAddr);
     void freePage(void* ptr);
 

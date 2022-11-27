@@ -7,6 +7,7 @@ namespace Heap {
     struct __attribute__((packed)) Node {
         uint32_t size;
         Node* next = nullptr;
+        void print();
     };
 
     constexpr int sizeofNode = sizeof(Node);

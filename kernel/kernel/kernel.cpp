@@ -68,14 +68,16 @@ extern "C" void kernel_main(void) {
 
     Heap::FreeList heap((VirtualAddr)newPage, VMM::pageSize);
 
-    int* ptr = (int*)heap.alloc(sizeof(int));
-    heap.print();
+    int* ptr = nullptr;
+    ptr = (int*)heap.alloc(5000);
     *ptr = 5;
     printf("Some data I have at addr: %u is: %d\n", ptr, *ptr);
     heap.free(ptr);
     ptr = (int*)heap.alloc(sizeof(int));
     *ptr = 10;
     printf("Some data I have at addr: %u is: %d\n", ptr, *ptr);
+
+    heap.print();
 
     panic("Nothing to do");
 }
