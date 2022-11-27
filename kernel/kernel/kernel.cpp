@@ -7,6 +7,7 @@
 #include <kernel/memory/pmm.h>
 #include <kernel/memory/vmm.h>
 #include <kernel/memory/heap.h>
+#include <stdlib.h>
 
 multiboot_info_t* mbd;
 unsigned int grub_checkvalue;
@@ -66,18 +67,17 @@ extern "C" void kernel_main(void) {
     void* newPage = VMM::get().allocPage();
     printf("New Page is at: %u\n", newPage);
 
-    Heap::FreeList heap((VirtualAddr)newPage, VMM::pageSize);
+    MallocHeap::init();
 
-    int* ptr = nullptr;
-    ptr = (int*)heap.alloc(5000);
+    int* ptr = (int*)malloc(5000);
     *ptr = 5;
     printf("Some data I have at addr: %u is: %d\n", ptr, *ptr);
-    heap.free(ptr);
-    ptr = (int*)heap.alloc(sizeof(int));
+    free(ptr);
+    ptr = (int*)malloc(sizeof(int));
     *ptr = 10;
     printf("Some data I have at addr: %u is: %d\n", ptr, *ptr);
 
-    heap.print();
+    MallocHeap::get().print();
 
     panic("Nothing to do");
 }

@@ -15,6 +15,7 @@ namespace Heap {
     class FreeList {
         Node* head;
     public:
+        FreeList() { head = nullptr; }
         FreeList(VirtualAddr addr, uint32_t size);
         void* alloc(uint32_t size);
         void addMemory(VirtualAddr addr, uint32_t size);
@@ -26,3 +27,8 @@ namespace Heap {
         void addNode(Node* newNode);
     };
 };
+
+namespace MallocHeap {
+    void init();
+    Heap::FreeList get();
+}
