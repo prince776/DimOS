@@ -73,9 +73,13 @@ extern "C" void kernel_main(void) {
     *ptr = 5;
     printf("Some data I have at addr: %u is: %d\n", ptr, *ptr);
     free(ptr);
-    ptr = (int*)malloc(sizeof(int));
-    *ptr = 10;
+    ptr = new int(10);
     printf("Some data I have at addr: %u is: %d\n", ptr, *ptr);
+
+    int* arr = new int[5];
+    for (int i = 0; i < 5; i++) arr[i] = i + 1;
+    for (int i = 0; i < 5; i++)
+        printf("Array at idx %d is: %d\n", i, arr[i]);
 
     MallocHeap::get().print();
 
