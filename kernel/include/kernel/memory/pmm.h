@@ -45,7 +45,7 @@ public:
 
     inline PhysicalAddr getFrameAddr(int frame) { return (frame << 12); }
 
-    inline PhysicalAddr endMemory() { return (PhysicalAddr)bitmap + elementCnt(); }
+    inline PhysicalAddr endMemory() { return 0; }//}(PhysicalAddr)bitmap + elementCnt(); }
     int firstFreeFrame();
     int firstNFreeFrames(int n);
 

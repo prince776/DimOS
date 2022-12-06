@@ -56,23 +56,23 @@ ISR_NOERRCODE 31
 .extern isr_handler
 
 isr_common_stub:
-	push %eax
-	push %ebx
-	push %ecx
-	push %edx
-	push %ebp
-	push %esi
-	push %edi
-
-	call isr_handler
-
-	pop	%edi
-	pop	%esi
-	pop	%ebp
-	pop	%edx
-	pop	%ecx
-	pop	%ebx
-	pop %eax
-
-	add $8, %esp
-	iret
+	# push %eax
+	# push %ebx
+	# push %ecx
+	# push %edx
+	# push %ebp
+	# push %esi
+	# push %edi
+# 
+	# call isr_handler
+# 
+	# pop	%edi
+	# pop	%esi
+	# pop	%ebp
+	# pop	%edx
+	# pop	%ecx
+	# pop	%ebx
+	# pop %eax
+# 
+	# add $8, %esp
+	# iret

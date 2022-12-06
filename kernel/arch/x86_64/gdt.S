@@ -10,6 +10,6 @@ gdt_flush:
 	movw %ax, %fs
 	movw %ax, %gs
 	movw %ax, %es
-	ljmp $0x08, $gdt_flush_ret		# 0x08 is offset to code segment in gdt
+	# ljmp $0x08, $gdt_flush_ret		# 0x08 is offset to code segment in gdt
 gdt_flush_ret:
 	ret

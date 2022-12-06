@@ -11,7 +11,7 @@ extern "C" void isr_handler(struct cpu_state cpu, uint32_t interrupt, struct sta
         handler(cpu, interrupt, stack);
     }
     else {
-        printf("Unhandled interrupt: %d\n", (int)interrupt);
+        // printf("Unhandled interrupt: %d\n", (int)interrupt);
     }
 }
 
@@ -23,7 +23,7 @@ void page_fault_handler(cpu_state cpu, uint32_t interrupt, stack_state stack) {
     // A page fault has occurred.
     // The faulting address is stored in the CR2 register.
     uint32_t faulting_address;
-    asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
+    // asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
 
     // The error code gives us details of what happened.
     int present = !(stack.error_code & 0x1); // Page not present
