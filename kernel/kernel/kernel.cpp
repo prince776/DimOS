@@ -71,6 +71,39 @@ extern "C" void kernel_main(void) {
 
     auto hhdmRes = hhdm_request.response;
     printf("HHDM offset: %x\n", hhdmRes->offset);
+
+    __asm__ volatile ("int $0x00");
+    __asm__ volatile ("int $0x01");
+    __asm__ volatile ("int $0x02");
+    __asm__ volatile ("int $0x03");
+    __asm__ volatile ("int $0x04");
+    __asm__ volatile ("int $0x05");
+    __asm__ volatile ("int $0x06");
+    __asm__ volatile ("int $0x07");
+    __asm__ volatile ("int $0x08");
+    __asm__ volatile ("int $0x09");
+    __asm__ volatile ("int $0x0a");
+    __asm__ volatile ("int $0x0b");
+    __asm__ volatile ("int $0x0c");
+    __asm__ volatile ("int $0x0d");
+    __asm__ volatile ("int $0x0e");
+    __asm__ volatile ("int $0x0f");
+    __asm__ volatile ("int $0x10");
+    __asm__ volatile ("int $0x11");
+    __asm__ volatile ("int $0x12");
+    __asm__ volatile ("int $0x13");
+    __asm__ volatile ("int $0x14");
+    __asm__ volatile ("int $0x15");
+    __asm__ volatile ("int $0x16");
+    __asm__ volatile ("int $0x17");
+    __asm__ volatile ("int $0x18");
+    __asm__ volatile ("int $0x19");
+    __asm__ volatile ("int $0x1a");
+    __asm__ volatile ("int $0x1b");
+    __asm__ volatile ("int $0x1c");
+    __asm__ volatile ("int $0x1d");
+    __asm__ volatile ("int $0x1e");
+
     // printf("--------------------------------------------------\n");
     // printf("Kernel memory range: [%x, %x)\n", &kernel_start, &kernel_end);
     // printf("Total RAM: [0, %x)\n", totalRamSize);

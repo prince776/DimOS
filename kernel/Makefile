@@ -51,6 +51,7 @@ $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
 kernel/common.o \
 kernel/debug.o \
+kernel/isr.o \
 kernel/demo/demo.o
 
 OBJS=\
