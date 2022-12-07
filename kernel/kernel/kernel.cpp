@@ -13,6 +13,7 @@
 #include <kernel/limine.h>
 #include <stdio.h>
 #include <kernel/debug.h>
+#include <demo/demo.h>
 
 // extern uintptr_t kernel_start;
 // extern uintptr_t kernel_end;
@@ -54,6 +55,7 @@ extern "C" void kernel_main(void) {
     // terminal_request.response->write(terminal, "Hello World!", 11);
     // print_unsigned_decimal(x);
     printf("Hello Nerd %d\n", x);
+    demo_stack_smashing("1234456784567890-");
     // We're done, just hang...
     done();
     // terminal_initialize();

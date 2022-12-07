@@ -17,8 +17,7 @@ CFLAGS:=$(CFLAGS) -Wall  \
 	-Wextra 			 \
     -std=c11             \
     -ffreestanding       \
-    -fno-stack-protector \
-    -fno-stack-check     \
+    -fstack-protector-strong \
     -fno-lto             \
     -fno-pie             \
     -fno-pic             \
@@ -50,7 +49,8 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
-kernel/debug.o
+kernel/debug.o \
+kernel/demo/demo.o
 
 OBJS=\
 $(KERNEL_OBJS) \
