@@ -49,7 +49,8 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
-kernel/kernel.o
+kernel/kernel.o \
+kernel/debug.o
 
 OBJS=\
 $(KERNEL_OBJS) \

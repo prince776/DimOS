@@ -11,11 +11,14 @@
 #include <stddef.h>
 
 #include <kernel/limine.h>
+#include <stdio.h>
+#include <kernel/debug.h>
 
 // extern uintptr_t kernel_start;
 // extern uintptr_t kernel_end;
+extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
-static volatile struct limine_terminal_request terminal_request = {
+volatile struct limine_terminal_request terminal_request = {
     .id = LIMINE_TERMINAL_REQUEST,
     .revision = 0
 };
@@ -25,8 +28,6 @@ static void done(void) {
         __asm__("hlt");
     }
 }
-
-extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
 extern "C" void kernel_early() {
     for (auto ctor = &__init_array_start; ctor < &__init_array_end; ctor++) {
@@ -40,23 +41,6 @@ __attribute__((constructor)) void foo(void)
     x = 12345;
 }
 
-void print_unsigned_decimal(unsigned int val)
-{
-    char str[13];
-    str[12] = 0;
-    int pos = 11;
-    while (pos >= 0)
-    {
-        str[pos] = '0' + (val % 10);
-        val /= 10;
-        if (val == 0) break;
-        pos--;
-    }
-    struct limine_terminal* terminal = terminal_request.response->terminals[0];
-    terminal_request.response->write(terminal, str + pos, 13 - pos);
-}
-
-
 extern "C" void kernel_main(void) {
     // Ensure we got a terminal
     if (terminal_request.response == NULL
@@ -66,9 +50,10 @@ extern "C" void kernel_main(void) {
 
     // We should now be able to call the Limine terminal to print out
     // a simple "Hello World" to screen.
-    struct limine_terminal* terminal = terminal_request.response->terminals[0];
-    terminal_request.response->write(terminal, "Hello World!", 11);
-    print_unsigned_decimal(x);
+    // struct limine_terminal* terminal = terminal_request.response->terminals[0];
+    // terminal_request.response->write(terminal, "Hello World!", 11);
+    // print_unsigned_decimal(x);
+    printf("Hello Nerd %d\n", x);
     // We're done, just hang...
     done();
     // terminal_initialize();
