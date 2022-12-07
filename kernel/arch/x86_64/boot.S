@@ -3,11 +3,11 @@
 .global _start
 .type _start, @function
 _start:
-	# Call kernel early with grub multiboot info
-	call kernel_early
+	# Setup descriptor tables.
+	call init_descriptor_tables
 
-	# Setup descriptor tables
-	// call init_descriptor_tables
+	# Do early setup including calling global constructors.
+	call kernel_early
 
 	# Transfer control to the main kernel.
 	call kernel_main

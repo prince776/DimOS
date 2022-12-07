@@ -49,6 +49,7 @@ LIBS:=$(LIBS) $(KERNEL_ARCH_LIBS)
 KERNEL_OBJS=\
 $(KERNEL_ARCH_OBJS) \
 kernel/kernel.o \
+kernel/common.o \
 kernel/debug.o \
 kernel/demo/demo.o
 
