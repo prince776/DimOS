@@ -1,21 +1,13 @@
-// #include <kernel/tty.h>
-// #include <stdio.h>
 #include <stdint-gcc.h>
-// #include <kernel/multiboot.h>
 #include <kernel/common.h>
-// #include <demo/demo.h>
-// #include <kernel/memory/pmm.h>
-// #include <kernel/memory/vmm.h>
-// #include <kernel/memory/heap.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <kernel/limine.h>
 #include <stdio.h>
 #include <kernel/debug.h>
 #include <demo/demo.h>
+#include <kernel/memory/pmm.h>
 
-// extern uintptr_t kernel_start;
-// extern uintptr_t kernel_end;
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
 volatile struct limine_terminal_request terminal_request = {
@@ -38,11 +30,7 @@ static volatile limine_hhdm_request hhdm_request = {
     .revision = 0
 };
 
-static void done(void) {
-    for (;;) {
-        __asm__("hlt");
-    }
-}
+uint64_t HHDMOffset;
 
 extern "C" void kernel_early() {
     for (auto ctor = &__init_array_start; ctor < &__init_array_end; ctor++) {
@@ -56,65 +44,55 @@ extern "C" void kernel_early() {
 }
 
 extern "C" void kernel_main(void) {
+
+    // *************** Parse the Memory Map **************************//
     auto memArr = memmap_request.response->entries;
     auto memArrLen = memmap_request.response->entry_count;
-    uint64_t total = 0;
+    PhysicalMemMap physcialMemMap;
     for (int i = 0; i < memArrLen; i++) {
         auto memEntry = memArr[i];
-        printf("Memory entry %d: base: %x length: %x type: %x\n", i, memEntry->base, memEntry->length, memEntry->type);
-        if (memEntry->type == 0)
-            total = memEntry->base + memEntry->length;
+        if (memEntry->type == LIMINE_MEMMAP_USABLE) {
+            physcialMemMap.totalSize = memEntry->base + memEntry->length;
+            physcialMemMap.availMemArrCnt++;
+        }
     }
+    MemRange physicalRange[physcialMemMap.availMemArrCnt];
+    for (int i = 0, j = 0; i < memArrLen; i++) {
+        auto memEntry = memArr[i];
+        if (memEntry->type == LIMINE_MEMMAP_USABLE) {
+            physicalRange[j].start = memEntry->base;
+            physicalRange[j].size = memEntry->length;
+            j++;
+        }
+    }
+    physcialMemMap.availableMemArr = &physicalRange[0];
+    printf("Physcial Memory Map: Total(%u) ------------------------------------\n", physcialMemMap.totalSize);
+    for (int i = 0; i < physcialMemMap.availMemArrCnt; i++) {
+        auto& memEntry = physcialMemMap.availableMemArr[i];
+        printf("Memory entry %d: base: %x length: %x\n", i, memEntry.start, memEntry.size);
+    }
+    printf("------------------------------------\n");
 
     auto kernelAddr = kerenel_address_request.response;
-    printf("Kernel Addr-> Physical: %x Virtual: %x\n", kernelAddr->physical_base, kernelAddr->virtual_base);
-
     auto hhdmRes = hhdm_request.response;
+    HHDMOffset = hhdmRes->offset;
+    // ******************************************************************************//
+    printf("Kernel Addr-> Physical: %x Virtual: %x\n", kernelAddr->physical_base, kernelAddr->virtual_base);
     printf("HHDM offset: %x\n", hhdmRes->offset);
 
-    __asm__ volatile ("int $0x00");
-    __asm__ volatile ("int $0x01");
-    __asm__ volatile ("int $0x02");
-    __asm__ volatile ("int $0x03");
-    __asm__ volatile ("int $0x04");
-    __asm__ volatile ("int $0x05");
-    __asm__ volatile ("int $0x06");
-    __asm__ volatile ("int $0x07");
     __asm__ volatile ("int $0x08");
-    __asm__ volatile ("int $0x09");
-    __asm__ volatile ("int $0x0a");
-    __asm__ volatile ("int $0x0b");
-    __asm__ volatile ("int $0x0c");
-    __asm__ volatile ("int $0x0d");
-    __asm__ volatile ("int $0x0e");
-    __asm__ volatile ("int $0x0f");
     __asm__ volatile ("int $0x10");
-    __asm__ volatile ("int $0x11");
-    __asm__ volatile ("int $0x12");
-    __asm__ volatile ("int $0x13");
-    __asm__ volatile ("int $0x14");
-    __asm__ volatile ("int $0x15");
-    __asm__ volatile ("int $0x16");
-    __asm__ volatile ("int $0x17");
-    __asm__ volatile ("int $0x18");
-    __asm__ volatile ("int $0x19");
-    __asm__ volatile ("int $0x1a");
-    __asm__ volatile ("int $0x1b");
-    __asm__ volatile ("int $0x1c");
-    __asm__ volatile ("int $0x1d");
-    __asm__ volatile ("int $0x1e");
 
-    // printf("--------------------------------------------------\n");
-    // printf("Kernel memory range: [%x, %x)\n", &kernel_start, &kernel_end);
-    // printf("Total RAM: [0, %x)\n", totalRamSize);
-    // printf("Available ram range: [%x, %x)\n", availRamStart, availRamStart + availRamSize);
-    // printf("--------------------------------------------------\n");
+    PMM::get().init(physcialMemMap);
 
-    // PMM::get().init(availRamStart + availRamSize, &kernel_end, availRamStart + availRamSize);
-
-    // void* testFrame = PMM::get().allocFrame();
-    // printf("Allocated memory: %x\n", testFrame);
-
+    PhysicalAddr testFrame = PMM::get().allocFrame();
+    printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+    testFrame = PMM::get().allocFrame();
+    printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+    testFrame = PMM::get().allocFrame();
+    printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+    testFrame = PMM::get().allocFrame();
+    printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
     // VMM::get().init();
     // void* newPage = VMM::get().allocPage();
     // printf("New Page is at: %x\n", newPage);

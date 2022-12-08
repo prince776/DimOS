@@ -52,6 +52,8 @@ kernel/kernel.o \
 kernel/common.o \
 kernel/debug.o \
 kernel/isr.o \
+kernel/supcpp.o \
+kernel/memory/pmm.o \
 kernel/demo/demo.o
 
 OBJS=\

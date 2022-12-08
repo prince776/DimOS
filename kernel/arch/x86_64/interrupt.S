@@ -10,7 +10,6 @@
 .macro isr_err_stub code
     isr_stub_\code:
         push %rbp
-        movq %rsp, %rbp
         pushq $\code
         jmp isr_common_stub
 .endm
