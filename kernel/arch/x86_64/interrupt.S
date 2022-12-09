@@ -123,15 +123,11 @@ isr_common_stub:
     cld
     pusha64
 
-
-
     movq %rsp, %rdi     // get the stack pointer as param to isr_handler
     call isr_handler
 
     popa64
-    add $18, %rsp
-    cli
-    hlt
+    add $16, %rsp
 
     iretq
 
