@@ -6,13 +6,13 @@
 isr_handler_t interrupt_handlers[256];
 
 extern "C" void isr_handler(ISRFrame * frame) {
-    auto vector = frame->base_frame.vector;
-    if (interrupt_handlers[vector] != 0) {
-        isr_handler_t handler = interrupt_handlers[vector];
+    auto isrNum = frame->isrNumber;
+    if (interrupt_handlers[isrNum] != 0) {
+        isr_handler_t handler = interrupt_handlers[isrNum];
         handler(frame);
     }
     else {
-        printf("Unhandled interrupt: %x\n", vector);
+        printf("Unhandled interrupt: %x\n", isrNum);
     }
 }
 

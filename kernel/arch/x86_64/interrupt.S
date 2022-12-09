@@ -9,7 +9,6 @@
 
 .macro isr_err_stub code
     isr_stub_\code:
-        push %rbp
         pushq $\code
         jmp isr_common_stub
 .endm
@@ -82,81 +81,57 @@ isr_stub_table:
     .quad isr_stub_30
     .quad isr_stub_31
 
-.macro pushagrd
-push %rax
-push %rbx
-push %rcx
-push %rdx
-push %rsi
-push %rdi
+.macro pusha64
+    pushq %rax
+    pushq %rbx
+    pushq %rcx
+    pushq %rdx
+    pushq %rsi
+    pushq %rdi
+    pushq %rbp
+    pushq %r8
+    pushq %r9
+    pushq %r10
+    pushq %r11
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
 .endm
 
-.macro popagrd
-pop %rdi
-pop %rsi
-pop %rdx
-pop %rcx
-pop %rbx
-pop %rax
-.endm
-
-.macro pushacrd
-movq %cr0, %rax
-push %rax
-movq %cr2, %rax
-push %rax
-movq %cr3, %rax
-push %rax
-movq %cr4, %rax
-push %rax
-.endm
-
-.macro popacrd
-pop %rax
-movq %rax, %cr4
-pop %rax
-movq %rax, %cr3
-pop %rax
-movq %rax, %cr2
-pop %rax
-movq %rax, %cr0
+.macro popa64
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+    popq %r11
+    popq %r10
+    popq %r9
+    popq %r8
+    popq %rbp
+    popq %rdi
+    popq %rsi
+    popq %rdx
+    popq %rcx
+    popq %rbx
+    popq %rax
 .endm
 
 .extern isr_handler
 
 isr_common_stub:
-    push %rbp
-    movq %rsp, %rbp
-    pushagrd
-    pushacrd
-    movw %ds, %ax
-    pushq %rax
-    pushq $0
-    movw $0x10, %ax
-    movw %ax, %ds
-    movw %ax, %es
-    movw %ax, %ss
+    cld
+    pusha64
 
-    leaq 0x10(%rsp), %rdi
+    movq %rsp, %rdi     // get the stack pointer as param to isr_handler
     call isr_handler
 
-    pop %rax
-    pop %rax
-    movw %ax, %ds
-    movw %ax, %es
-    popacrd
-    popagrd
-    pop %rbp
-    add $0x10, %rsp
+    popa64
+    add $16, %rsp
+
     iretq
 
 .global idt_reload
 idt_reload:
-    push %rbp
-    movq %rsp, %rbp
-    pushfq
-    cli
     lidt (%rdi)
-    popfq
-    pop %rbp
     ret
