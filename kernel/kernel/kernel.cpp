@@ -80,8 +80,7 @@ extern "C" void kernel_main(void) {
     printf("Kernel Addr-> Physical: %x Virtual: %x\n", kernelAddr->physical_base, kernelAddr->virtual_base);
     printf("HHDM offset: %x\n", hhdmRes->offset);
 
-    __asm__ volatile ("int $0x08");
-    // __asm__ volatile ("int $0x10");
+    __asm__ volatile ("int $0x10");
 
     // PMM::get().init(physcialMemMap);
 
