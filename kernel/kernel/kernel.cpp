@@ -81,18 +81,18 @@ extern "C" void kernel_main(void) {
     printf("HHDM offset: %x\n", hhdmRes->offset);
 
     __asm__ volatile ("int $0x08");
-    __asm__ volatile ("int $0x10");
+    // __asm__ volatile ("int $0x10");
 
-    PMM::get().init(physcialMemMap);
+    // PMM::get().init(physcialMemMap);
 
-    PhysicalAddr testFrame = PMM::get().allocFrame();
-    printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-    testFrame = PMM::get().allocFrame();
-    printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-    testFrame = PMM::get().allocFrame();
-    printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-    testFrame = PMM::get().allocFrame();
-    printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+    // PhysicalAddr testFrame = PMM::get().allocFrame();
+    // printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+    // testFrame = PMM::get().allocFrame();
+    // printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+    // testFrame = PMM::get().allocFrame();
+    // printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+    // testFrame = PMM::get().allocFrame();
+    // printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
     // VMM::get().init();
     // void* newPage = VMM::get().allocPage();
     // printf("New Page is at: %x\n", newPage);
