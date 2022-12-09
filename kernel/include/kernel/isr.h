@@ -24,6 +24,7 @@ struct ISRFrame {
     uint64_t isrNumber;
     uint64_t errorCode;
 
+    // Interrupt stack frame
     uint64_t rip;
     uint64_t cs;
     uint64_t rflags;

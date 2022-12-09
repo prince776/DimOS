@@ -82,61 +82,60 @@ isr_stub_table:
     .quad isr_stub_31
 
 .macro pusha64
-    push %rax
-    push %rbx
-    push %rcx
-    push %rdx
-    push %rbp
-    push %rdi
-    push %rsi
-    push %r8
-    push %r9
-    push %r10
-    push %r11
-    push %r12
-    push %r13
-    push %r14
-    push %r15
+    pushq %rax
+    pushq %rbx
+    pushq %rcx
+    pushq %rdx
+    pushq %rsi
+    pushq %rdi
+    pushq %rbp
+    pushq %r8
+    pushq %r9
+    pushq %r10
+    pushq %r11
+    pushq %r12
+    pushq %r13
+    pushq %r14
+    pushq %r15
 .endm
 
 .macro popa64
-    pop %r15
-    pop %r14
-    pop %r13
-    pop %r12
-    pop %r11
-    pop %r10
-    pop %r9
-    pop %r8
-    pop %rsi
-    pop %rdi
-    pop %rbp
-    pop %rdx
-    pop %rcx
-    pop %rbx
-    pop %rax
+    popq %r15
+    popq %r14
+    popq %r13
+    popq %r12
+    popq %r11
+    popq %r10
+    popq %r9
+    popq %r8
+    popq %rbp
+    popq %rdi
+    popq %rsi
+    popq %rdx
+    popq %rcx
+    popq %rbx
+    popq %rax
 .endm
 
 .extern isr_handler
 
 isr_common_stub:
+    cld
     pusha64
+
+
 
     movq %rsp, %rdi     // get the stack pointer as param to isr_handler
     call isr_handler
-    movq %rax, %rsp     // get the new stack pointer returned
 
     popa64
-    add $0x10, %rsp
+    add $18, %rsp
+    cli
+    hlt
+
     iretq
 
 .global idt_reload
 idt_reload:
-    push %rbp
-    movq %rsp, %rbp
-    pushfq
-    cli
     lidt (%rdi)
-    popfq
-    pop %rbp
     ret
