@@ -11,7 +11,7 @@
 
 extern uint64_t HHDMOffset;
 
-void PMM::init(const PhysicalMemMap& mem) {
+MemRange PMM::init(const PhysicalMemMap& mem) {
     memorySize = mem.totalSize;
     frameCnt = memorySize / frameSize;
 
@@ -28,7 +28,7 @@ void PMM::init(const PhysicalMemMap& mem) {
     }
     if (bitmap == nullptr) {
         panic("Can't allocate memory for PMM\n");
-        return;
+        return memRangeforBitmap;
     }
     // All memory unavilable initially
     deinitRegion(0, memorySize);
@@ -42,6 +42,7 @@ void PMM::init(const PhysicalMemMap& mem) {
     // Deintialize the memory used for storing bitmap
     deinitRegion(memRangeforBitmap.start, memRangeforBitmap.size);
     deinitRegion(0, frameSize);
+    return memRangeforBitmap;
 }
 
 void PMM::initRegion(PhysicalAddr start, uint64_t size) {

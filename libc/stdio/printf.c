@@ -54,9 +54,9 @@ static bool print_unsigned_decimal(unsigned int val)
 
 static bool print_decimal_64(int64_t val)
 {
-	char str[20];
-	str[19] = 0;
-	int pos = 18;
+	char str[22];
+	str[21] = 0;
+	int pos = 20;
 	bool negative = val < 0;
 	if (val < 0) val *= -1;
 	while (pos >= 0)

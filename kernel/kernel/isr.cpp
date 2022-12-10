@@ -16,30 +16,30 @@ extern "C" void isr_handler(ISRFrame * frame) {
     }
 }
 
-void register_interrupt_handler(uint8_t n, isr_handler_t handler) {
+void registerInterruptHandler(uint8_t n, isr_handler_t handler) {
     interrupt_handlers[n] = handler;
 }
 
-// void page_fault_handler(cpu_state cpu, uint32_t interrupt, stack_state stack) {
-//     // A page fault has occurred.
-//     // The faulting address is stored in the CR2 register.
-//     uint32_t faulting_address;
-//     asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
+void pageFaultHanlder(ISRFrame* frame) {
+    // A page fault has occurred.
+    // The faulting address is stored in the CR2 register.
+    uint64_t faulting_address;
+    asm volatile("mov %%cr2, %0" : "=r" (faulting_address));
 
-//     // The error code gives us details of what happened.
-//     int present = !(stack.error_code & 0x1); // Page not present
-//     int rw = stack.error_code & 0x2;           // Write operation?
-//     int us = stack.error_code & 0x4;           // Processor was in user-mode?
-//     int reserved = stack.error_code & 0x8;     // Overwritten CPU-reserved bits of page entry?
-//     int id = stack.error_code & 0x10;          // Caused by an instruction fetch?
+    // The error code gives us details of what happened.
+    int present = !(frame->errorCode & 0x1); // Page not present
+    int rw = frame->errorCode & 0x2;           // Write operation?
+    int us = frame->errorCode & 0x4;           // Processor was in user-mode?
+    int reserved = frame->errorCode & 0x8;     // Overwritten CPU-reserved bits of page entry?
+    int id = frame->errorCode & 0x10;          // Caused by an instruction fetch?
 
-//     // Output an error message.
-//     printf("Page fault! ( ");
-//     if (present) { printf("present "); }
-//     if (rw) { printf("read-only "); }
-//     if (us) { printf("user-mode "); }
-//     if (reserved) { printf("reserved "); }
-//     printf(") at addr:%d\n", faulting_address);
+    // Output an error message.
+    printf("Page fault! ( ");
+    if (present) { printf("present "); }
+    if (rw) { printf("read-only "); }
+    if (us) { printf("user-mode "); }
+    if (reserved) { printf("reserved "); }
+    printf(") at addr:%x\n", faulting_address);
 
-//     panic("---------------CAN'T PROCEED AFTER PAGE FAULT---------------");
-// }
+    panic("---------------CAN'T PROCEED AFTER PAGE FAULT---------------");
+}

@@ -7,6 +7,7 @@
 #include <kernel/debug.h>
 #include <demo/demo.h>
 #include <kernel/memory/pmm.h>
+#include <kernel/memory/vmm.h>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -29,6 +30,16 @@ static volatile limine_hhdm_request hhdm_request = {
     .id = LIMINE_HHDM_REQUEST,
     .revision = 0
 };
+char* limineMemTypeMap[] = {
+"USABLE",
+"RESERVED",
+"ACPI_RECLAIMABLE",
+"ACPI_NVS",
+"BAD_MEMORY",
+"BOOTLOADER_RECLAIMABLE",
+"KERNEL_AND_MODULES",
+"FRAMEBUFFER",
+};
 
 uint64_t HHDMOffset;
 
@@ -49,13 +60,16 @@ extern "C" void kernel_main(void) {
     auto memArr = memmap_request.response->entries;
     auto memArrLen = memmap_request.response->entry_count;
     PhysicalMemMap physcialMemMap;
+    physcialMemMap.totalSize = memArr[memArrLen - 2]->base + memArr[memArrLen - 2]->length;
+    printf("Physcial Memory Map: (Total: %x) ------------------------------------\n", physcialMemMap.totalSize);
     for (int i = 0; i < memArrLen; i++) {
         auto memEntry = memArr[i];
+        printf("Memory entry %d: base: %x length: %x type: %s\n", i, memEntry->base, memEntry->length, limineMemTypeMap[memEntry->type]);
         if (memEntry->type == LIMINE_MEMMAP_USABLE) {
-            physcialMemMap.totalSize = memEntry->base + memEntry->length;
             physcialMemMap.availMemArrCnt++;
         }
     }
+    printf("------------------------------------------------------------------------\n");
     MemRange physicalRange[physcialMemMap.availMemArrCnt];
     for (int i = 0, j = 0; i < memArrLen; i++) {
         auto memEntry = memArr[i];
@@ -64,14 +78,15 @@ extern "C" void kernel_main(void) {
             physicalRange[j].size = memEntry->length;
             j++;
         }
+        else if (memEntry->type == LIMINE_MEMMAP_KERNEL_AND_MODULES) {
+            physcialMemMap.kernelStart = memEntry->base;
+            physcialMemMap.kernelSize = memEntry->length;
+        }
     }
     physcialMemMap.availableMemArr = &physicalRange[0];
-    printf("Physcial Memory Map: Total(%u) ------------------------------------\n", physcialMemMap.totalSize);
     for (int i = 0; i < physcialMemMap.availMemArrCnt; i++) {
         auto& memEntry = physcialMemMap.availableMemArr[i];
-        printf("Memory entry %d: base: %x length: %x\n", i, memEntry.start, memEntry.size);
     }
-    printf("------------------------------------\n");
 
     auto kernelAddr = kerenel_address_request.response;
     auto hhdmRes = hhdm_request.response;
@@ -80,21 +95,29 @@ extern "C" void kernel_main(void) {
     printf("Kernel Addr-> Physical: %x Virtual: %x\n", kernelAddr->physical_base, kernelAddr->virtual_base);
     printf("HHDM offset: %x\n", hhdmRes->offset);
 
-    __asm__ volatile ("int $0x10");
+    // __asm__ volatile ("int $0x10");
 
-    // PMM::get().init(physcialMemMap);
+    auto pmmMemRange = PMM::get().init(physcialMemMap);
 
-    // PhysicalAddr testFrame = PMM::get().allocFrame();
-    // printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-    // testFrame = PMM::get().allocFrame();
-    // printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-    // testFrame = PMM::get().allocFrame();
-    // printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-    // testFrame = PMM::get().allocFrame();
-    // printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-    // VMM::get().init();
-    // void* newPage = VMM::get().allocPage();
-    // printf("New Page is at: %x\n", newPage);
+    { // test code remove together
+        PhysicalAddr testFrame = PMM::get().allocFrame();
+        printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+        testFrame = PMM::get().allocFrame();
+        printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+        testFrame = PMM::get().allocFrame();
+        printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+        testFrame = PMM::get().allocFrame();
+        printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
+        pmmMemRange.size += 0x4000;
+    }
+
+    VMM::get().init(physcialMemMap, &pmmMemRange, 1);
+    printf("Alright, My Paging system is in use now!\n");
+    // int* x = (int*)0x63000;
+    // *x = 1000;
+    // printf("Trying Page fault: %d\n", x);
+    VirtualAddr newPage = VMM::get().allocPage(true);
+    printf("New Page is at: %x\n", newPage);
 
     // MallocHeap::init();
 

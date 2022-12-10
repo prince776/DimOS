@@ -10,12 +10,13 @@ struct MemRange {
 
 struct PhysicalMemMap {
     PhysicalMemMap() {
-        totalSize = availMemArrCnt = 0;
+        totalSize = availMemArrCnt = kernelStart = kernelSize = 0;
         availableMemArr = nullptr;
     }
     uint64_t totalSize;
     MemRange* availableMemArr;
     uint64_t availMemArrCnt;
+    uint64_t kernelStart, kernelSize;
 };
 
 
@@ -42,7 +43,8 @@ public:
     }
 
     // MemRanges in this map MUST be 4k aligned.
-    void init(const PhysicalMemMap& mem);
+    // Returns the extra memory range used by pmm during initialization.
+    MemRange init(const PhysicalMemMap& mem);
 
     inline void bitmapSet(int64_t bit) {
         bitmap[bit / framesPerElement] |= (1LL << (bit % framesPerElement));

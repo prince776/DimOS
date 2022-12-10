@@ -33,5 +33,5 @@ struct ISRFrame {
 };
 
 typedef void (*isr_handler_t)(ISRFrame* frame);
-void register_interrupt_handler(uint8_t n, isr_handler_t handler);
-// void page_fault_handler(cpu_state cpu, uint32_t interrupt, stack_state stack);
+void registerInterruptHandler(uint8_t n, isr_handler_t handler);
+void pageFaultHanlder(ISRFrame* frame);
