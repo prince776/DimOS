@@ -55,6 +55,9 @@ kernel/isr.o \
 kernel/supcpp.o \
 kernel/memory/pmm.o \
 kernel/memory/vmm.o \
+kernel/memory/heap.o \
+kernel/memory/kheap.o \
+kernel/cpp/memory.o \
 kernel/demo/demo.o
 
 OBJS=\

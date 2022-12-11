@@ -3,14 +3,14 @@
 
 namespace Heap {
 
-    FreeList::FreeList(VirtualAddr addr, uint32_t size) {
+    FreeList::FreeList(VirtualAddr addr, uint64_t size) {
         head = nullptr;
         addMemory(addr, size);
     }
 
-    void* FreeList::alloc(uint32_t size) {
+    void* FreeList::alloc(uint64_t size) {
         Node* curr = head, * target = nullptr, * prev = nullptr, * prevNode = nullptr;
-        int32_t usedSize = INT32_MAX;
+        uint64_t usedSize = UINT64_MAX;
         while (curr != nullptr) {
             if (curr->size >= size && curr->size < usedSize) {
                 target = curr;
@@ -23,8 +23,8 @@ namespace Heap {
         if (target == nullptr) {
             // ask for more memory from vmm
             int reqPages = (size + sizeofNode + VMM::pageSize - 1) / VMM::pageSize;
-            void* addr = VMM::get().allocNPages(reqPages);
-            addMemory((VirtualAddr)addr, reqPages * VMM::pageSize);
+            VirtualAddr addr = VMM::get().allocNPages(true, reqPages); // TODO: Use LH for users
+            addMemory(addr, reqPages * VMM::pageSize);
             return alloc(size); // retry
         }
         Node* splitPart = split(target, size);
@@ -52,10 +52,11 @@ namespace Heap {
     void FreeList::addNode(Node* newNode) {
         Node* curr = head, * prev = nullptr;
         while (curr != nullptr && curr <= newNode) {
-            if ((uint32_t)curr + sizeofNode + curr->size == (uint32_t)newNode) { // it can be coalesced into curr from front
+            // Note: This casting important because pointer arithmetic :p
+            if ((uint64_t)curr + sizeofNode + curr->size == (uint64_t)newNode) { // it can be coalesced into curr from front
                 curr->size += sizeofNode + newNode->size;
                 Node* next = curr->next;
-                if ((uint32_t)next == (uint32_t)curr + sizeofNode + curr->size) { // next can be coalesced into curr
+                if ((uint64_t)next == (uint64_t)curr + sizeofNode + curr->size) { // next can be coalesced into curr
                     curr->size += sizeofNode + next->size;
                     curr->next = next->next;
                 }
@@ -71,18 +72,18 @@ namespace Heap {
         else {
             head = newNode;
         }
-        if ((uint32_t)newNode + sizeofNode + newNode->size == (uint32_t)curr) { // it can be coalesced into curr from back
+        if ((uint64_t)newNode + sizeofNode + newNode->size == (uint64_t)curr) { // it can be coalesced into curr from back
             newNode->size += sizeofNode + curr->size;
             newNode->next = curr->next;
             Node* next = curr->next;
-            if ((uint32_t)newNode + sizeofNode + newNode->size == (uint32_t)next) {
+            if ((uint64_t)newNode + sizeofNode + newNode->size == (uint64_t)next) {
                 newNode->size += sizeofNode + next->size;
                 newNode->next = next->next;
             }
         }
     }
 
-    void FreeList::addMemory(VirtualAddr addr, uint32_t size) {
+    void FreeList::addMemory(VirtualAddr addr, uint64_t size) {
         Node* newNode = (Node*)addr;
         newNode->size = size - sizeofNode;
         newNode->next = nullptr;
@@ -94,9 +95,9 @@ namespace Heap {
         addNode(newNode);
     }
 
-    Node* FreeList::split(Node* node, uint32_t size) {
+    Node* FreeList::split(Node* node, uint64_t size) {
         if (node->size < size + sizeofNode + 1) return nullptr;
-        Node* splitPart = (Node*)((uint32_t)node + sizeofNode + size);
+        Node* splitPart = (Node*)((uint64_t)node + sizeofNode + size);
         splitPart->size = node->size - size - sizeofNode;
         splitPart->next = nullptr;
         return splitPart;
@@ -113,6 +114,6 @@ namespace Heap {
     }
 
     void Node::print() {
-        printf("Node at: %u, sz: %u, next: %u\n", this, size, next);
+        printf("Node at: %x, sz: %x, next: %x\n", this, size, next);
     }
 }

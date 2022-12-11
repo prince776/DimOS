@@ -125,9 +125,19 @@ extern "C" void kernel_main(void) {
     printf("New continuous 12 Pages are at: %x\n", newPage);
     int* x = (int*)newPage;
     *x = 100;
-    printf("Value at this page is %d\n", *x);
-    x = (int*)((uint64_t)x + 12 * VMM::pageSize);
-    printf("[Trying Page Fault] Value at this page is %d\n", *x);
+    // Trying page fault
+    // {
+    //     printf("Value at this page is %d\n", *x);
+    //     x = (int*)((uint64_t)x + 12 * VMM::pageSize);
+    //     printf("[Trying Page Fault] Value at this page is %d\n", *x);
+    // }
+
+    x = new int;
+    *x = 3456;
+    printf("New allocated int: %x, %d\n", x, *x);
+    x = new int;
+    *x = 3456;
+    printf("New allocated int: %x, %d\n", x, *x);
 
     // MallocHeap::init();
 

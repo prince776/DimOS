@@ -9,7 +9,7 @@ extern "C" {
 
     __attribute__((__noreturn__))
         void abort(void);
-    void* malloc(uint32_t size);
+    void* malloc(uint64_t size);
     void free(void* ptr);
 
 #ifdef __cplusplus
