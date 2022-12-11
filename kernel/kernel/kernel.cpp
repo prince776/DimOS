@@ -113,11 +113,21 @@ extern "C" void kernel_main(void) {
 
     VMM::get().init(physcialMemMap, &pmmMemRange, 1);
     printf("Alright, My Paging system is in use now!\n");
-    // int* x = (int*)0x63000;
-    // *x = 1000;
-    // printf("Trying Page fault: %d\n", x);
-    VirtualAddr newPage = VMM::get().allocPage(true);
-    printf("New Page is at: %x\n", newPage);
+    for (int i = 0; i < 5; i++)
+    {
+        VirtualAddr newPage = VMM::get().allocPage(true);
+        printf("New Page is at: %x\n", newPage);
+        int* x = (int*)newPage;
+        *x = 100;
+        printf("Value at this page is %d\n", *x);
+    }
+    VirtualAddr newPage = VMM::get().allocNPages(true, 12);
+    printf("New continuous 12 Pages are at: %x\n", newPage);
+    int* x = (int*)newPage;
+    *x = 100;
+    printf("Value at this page is %d\n", *x);
+    x = (int*)((uint64_t)x + 12 * VMM::pageSize);
+    printf("[Trying Page Fault] Value at this page is %d\n", *x);
 
     // MallocHeap::init();
 

@@ -11,7 +11,9 @@
 constexpr int VMMTableLevelCnt = 4;
 struct IndexOffset {
     uint64_t i[VMMTableLevelCnt] = { 0 };
-    IndexOffset() = default;
+    IndexOffset() {
+        i[0] = i[1] = i[2] = i[3] = 0;
+    };
 
     IndexOffset(uint64_t i0, uint64_t i1, uint64_t i2, uint64_t i3) {
         i[0] = i0;
@@ -42,17 +44,6 @@ struct IndexOffset {
             }
         }
         return res;
-    }
-};
-
-struct PageInfo {
-    Paging::Entry* pte;
-    IndexOffset idx;
-
-    PageInfo() : pte(nullptr), idx() {}
-
-    inline VirtualAddr getVirtualAddr() const {
-        return idx.getVirtualAddr();
     }
 };
 
@@ -132,8 +123,5 @@ private:
     VirtualAddr allocPages(bool higherHalf, bool doMinCheck, int reqPages);
     static constexpr int minAvailablePages = 11;
 
-    struct PhysicalMemUsage {
-        uint64_t count;
-        PhysicalAddr lastAddr;
-    } physicalMemUsage;
+    MemRange physicalMemUsage;
 };

@@ -38,8 +38,8 @@ namespace Paging {
     struct Entry {
         uint64_t data;
 
-        Entry() : data(0) {}
-        Entry(uint64_t value) : data(value) {}
+        Entry(): data(0) {}
+        Entry(uint64_t value): data(value) {}
 
         inline void setFlags(uint64_t flags) { data |= flags; }
         inline void removeFlags(uint64_t flags) { data &= (~flags); }
@@ -47,7 +47,7 @@ namespace Paging {
 
         inline PhysicalAddr getPhysicalAddr() const { return data & physicalAddrMask; }
         inline void setPhysicalAdr(PhysicalAddr addr) {
-            data &= (~physicalAddrMask);
+            removeFlags(physicalAddrMask);
             data |= (addr & physicalAddrMask);
         }
 
@@ -65,7 +65,7 @@ namespace Paging {
     constexpr int entryCnt = 512;
     constexpr int defaultEntry = 0;
 
-    enum TableLevel : uint64_t {
+    enum TableLevel: uint64_t {
         LEVEL0 = 0,
         LEVEL1 = 1,
         LEVEL2 = 2,

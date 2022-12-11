@@ -1,5 +1,8 @@
 {
   "files.associations": {
     "*.h": "cpp"
-  }
+  },
+  "lldb.displayFormat": "auto",
+  "lldb.dereferencePointers": true,
+  "lldb.consoleMode": "commands"
 }
