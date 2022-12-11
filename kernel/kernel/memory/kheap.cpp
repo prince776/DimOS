@@ -5,8 +5,8 @@ static Heap::FreeList mallocHeap;
 
 namespace MallocHeap {
     void init() {
-        void* firstHeapPage = VMM::get().allocPage();
-        mallocHeap = Heap::FreeList((VirtualAddr)firstHeapPage, VMM::pageSize);
+        VirtualAddr firstHeapPage = VMM::get().allocPage(true);
+        mallocHeap = Heap::FreeList(firstHeapPage, VMM::pageSize);
     }
 
     Heap::FreeList get() {
@@ -14,7 +14,7 @@ namespace MallocHeap {
     }
 }
 
-extern "C" void* kmalloc(uint32_t size) {
+extern "C" void* kmalloc(uint64_t size) {
     return mallocHeap.alloc(size);
 }
 extern "C" void kfree(void* ptr) {

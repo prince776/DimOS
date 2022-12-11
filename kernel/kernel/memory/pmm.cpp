@@ -1,6 +1,7 @@
 #include <kernel/memory/pmm.h>
 #include <string.h>
 #include <stdio.h>
+#include <kernel/common.h>
 
 #ifdef PMMLOG
 #define LOG(fmt, ...) printf(fmt, ##__VA_ARGS__)
@@ -8,23 +9,49 @@
 #define LOG(...)
 #endif
 
-void PMM::init(uint32_t memSize, uint32_t* kernel_end_mem, uint32_t ramEnd) {
-    memorySize = memSize;
-    frameCnt = memorySize / frameSize;
-    bitmap = kernel_end_mem;
+extern uint64_t HHDMOffset;
 
-    // all memory unavilable initially
+MemRange PMM::init(const PhysicalMemMap& mem) {
+    memorySize = mem.totalSize;
+    frameCnt = memorySize / frameSize;
+
+    uint64_t reqMemForBitmap = elementCnt() * elementSize;
+    MemRange memRangeforBitmap;
+    for (int i = 0; i < 2; i++) {
+        const auto& memRange = mem.availableMemArr[i];
+        if (memRange.size >= reqMemForBitmap) {
+            bitmap = (uint64_t*)(memRange.start + HHDMOffset);
+            memRangeforBitmap.start = memRange.start;
+            memRangeforBitmap.size = reqMemForBitmap;
+            break;
+        }
+    }
+    if (bitmap == nullptr) {
+        panic("Can't allocate memory for PMM\n");
+        return memRangeforBitmap;
+    }
+    // All memory unavilable initially
     deinitRegion(0, memorySize);
     usedframes = frameCnt;
-    // initialize memory from [bitmap_end, ramend)
-    initRegion((PhysicalAddr)endMemory(), ramEnd - endMemory());
+
+    // Initialize from mem map
+    for (int i = 0; i < mem.availMemArrCnt; i++) {
+        const auto& memRange = mem.availableMemArr[i];
+        initRegion(memRange.start, memRange.size);
+    }
+    // Deintialize the memory used for storing bitmap
+    deinitRegion(memRangeforBitmap.start, memRangeforBitmap.size);
+    deinitRegion(0, frameSize);
+    return memRangeforBitmap;
 }
 
-void PMM::initRegion(PhysicalAddr start, uint32_t size) {
+void PMM::initRegion(PhysicalAddr start, uint64_t size) {
     LOG("[PMM] Initializing Physical memory region: [%u, %u)\n", start, start + size);
 
-    int frameSt = (start + frameSize - 1) / frameSize;
-    int cnt = (size + frameSize - 1) / frameSize;
+    int64_t frameSt = (start + frameSize - 1) / frameSize;
+    int64_t remSize = size - (frameSt * frameSize - start);
+    int64_t cnt = (remSize + frameSize - 1) / frameSize;
+
     while (cnt-- > 0) {
         bool wasSet = bitmapIsSet(frameSt);
         bitmapUnset(frameSt++);
@@ -34,11 +61,12 @@ void PMM::initRegion(PhysicalAddr start, uint32_t size) {
     }
 }
 
-void PMM::deinitRegion(PhysicalAddr start, uint32_t size) {
+void PMM::deinitRegion(PhysicalAddr start, uint64_t size) {
     LOG("[PMM] Deinitializing Physical memory region: [%u, %u)\n", start, start + size);
 
-    int frameSt = (start + frameSize - 1) / frameSize;
-    int cnt = (size + frameSize - 1) / frameSize;
+    int64_t frameSt = (start + frameSize - 1) / frameSize;
+    int64_t remSize = size - (frameSt * frameSize - start);
+    int64_t cnt = (remSize + frameSize - 1) / frameSize;
 
     while (cnt-- > 0) {
         bool wasUnset = !bitmapIsSet(frameSt);
@@ -49,11 +77,11 @@ void PMM::deinitRegion(PhysicalAddr start, uint32_t size) {
     }
 }
 
-int PMM::firstFreeFrame() {
-    for (int i = 0; i < elementCnt(); i++) {
-        if (bitmap[i] == 0xffffffff) continue;
-        for (int j = 0; j < 32; j++) {
-            if (!(bitmap[i] & (1 << j))) {
+int64_t PMM::firstFreeFrame() {
+    for (int64_t i = 0; i < elementCnt(); i++) {
+        if (bitmap[i] == 0xffffffffffffffff) continue;
+        for (int64_t j = 0; j < 64; j++) {
+            if (!(bitmap[i] & (1LL << j))) {
                 return i * framesPerElement + j;
             }
         }
@@ -61,9 +89,9 @@ int PMM::firstFreeFrame() {
     return -1;
 }
 
-int PMM::firstNFreeFrames(int n) {
+int64_t PMM::firstNFreeFrames(int64_t n) {
     if (n > elementCnt()) return -1;
-    int free = 0, i = 0;
+    int64_t free = 0, i = 0;
     for (; i < n; i++) {
         free += !bitmapIsSet(i);
     }
@@ -76,40 +104,39 @@ int PMM::firstNFreeFrames(int n) {
     return -1;
 }
 
-void* PMM::allocFrame() {
+PhysicalAddr PMM::allocFrame() {
     if (usedframes == frameCnt)
         return 0;
-    int frame = firstFreeFrame();
+    auto frame = firstFreeFrame();
     if (frame == -1)
         return 0;
 
-    LOG("[PMM] Allocating frame: %d\n", frame);
+    LOG("[PMM] Allocating frame: %l\n", frame);
     bitmapSet(frame);
     usedframes++;
     PhysicalAddr addr = frame * frameSize;
-    return (void*)addr;
+    return addr;
 }
 
-void* PMM::allocNFrames(int n) {
+PhysicalAddr PMM::allocNFrames(int64_t n) {
     if (usedframes + n >= frameCnt)
         return 0;
-    int frame = firstNFreeFrames(n);
+    auto frame = firstNFreeFrames(n);
     if (frame == -1)
         return 0;
 
-    LOG("[PMM] Allocating %d frames starting at: %d\n", n, frame);
-    for (int i = 0; i < n; i++) {
+    LOG("[PMM] Allocating %l frames starting at: %l\n", n, frame);
+    for (int64_t i = 0; i < n; i++) {
         bitmapSet(frame + i);
         usedframes++;
     }
     PhysicalAddr addr = frame * frameSize;
-    return (void*)addr;
+    return addr;
 }
 
-void PMM::freeFrame(void* addr) {
-    PhysicalAddr paddr = (PhysicalAddr)addr;
-    int frame = paddr / frameSize;
-    LOG("Freeing frame: %d\n", frame);
+void PMM::freeFrame(PhysicalAddr addr) {
+    int64_t frame = addr / frameSize;
+    LOG("Freeing frame: %l\n", frame);
     if (!bitmapIsSet(frame)) return;
 
     bitmapUnset(frame);

@@ -3,91 +3,95 @@
 #include <stdint-gcc.h>
 #include <kernel/memory/pmm.h>
 
-using VirtualAddr = uint32_t;
+using VirtualAddr = uint64_t;
 
-//////////////////////////////////////// Page Table Entry ////////////////////////////////////////
+// Paging::Table here refers to a generic table representing PT/PD/PDPT/PML4, not the PageTable that's pointed by PageDirectory.
 
-enum PTEAttrib {
-    I86_PTE_PRESENT = 1,			//0000000000000000000000000000001
-    I86_PTE_WRITABLE = 2,			//0000000000000000000000000000010
-    I86_PTE_USER = 4,			//0000000000000000000000000000100
-    I86_PTE_WRITETHOUGH = 8,			//0000000000000000000000000001000
-    I86_PTE_NOT_CACHEABLE = 0x10,		//0000000000000000000000000010000
-    I86_PTE_ACCESSED = 0x20,		//0000000000000000000000000100000 bnm,  
-    I86_PTE_DIRTY = 0x40,		//0000000000000000000000001000000
-    I86_PTE_PAT = 0x80,		//0000000000000000000000010000000
-    I86_PTE_CPU_GLOBAL = 0x100,		//0000000000000000000000100000000
-    I86_PTE_LV4_GLOBAL = 0x200,		//0000000000000000000001000000000
-    I86_PTE_FRAME = 0x7FFFF000, 	//1111111111111111111000000000000
+/**
+ * @brief Steps
+ * Do HHDM for used up parts of Physcial Mempory
+ * Do KH(kernel Half, last 2 GiB) mapping for kernel
+ * Now VMM is gonna have modes, user/kernel
+ * for kernel mode (only mode for now), VMM will start looking for free pages starting from KH (2nd last PDE)
+ * For ease of impl, we can try to map 2GiB of physical mem to KH, that puts a strict req on memory though,
+ * even though kernel would probably need much less in the foreseeable future. This also saves the trouble of
+ * keeping virtual address of PageTables, so that'd cut our Paging Table cost by 50%
+ */
 
-    // CUSTOM FLAGS
-    I86_PTE_USABLE = 0x400, //0000000000000000000010000000000
-};
-using PTEntry = uint32_t;
+namespace Paging {
+    enum FlagOffset {
+        PRESENT_FLAG = 0,
+        WRITABLE = 1,
+        USER_ACCESSIBLE = 2,
+        CACHING = 3,
+        DISABLE_CACHE = 4,
+        ACCESSED = 5,
+        DIRTY = 6,
+        HUGE_PAGE = 7,
+        GLOBAL = 8,
+        NO_EXECUTE = 63,
+        TABLE_LEVEL = 9, // Custom flag to figure out what level this table belongs to
+        TABLE_LEVEL_2 = 10,
+    };
 
-namespace pte {
-    static PTEntry defaultVal = 0;
-    inline void addAttrib(PTEntry* e, PTEAttrib attrib) { *e |= attrib; }
-    inline void delAttrib(PTEntry* e, PTEAttrib attrib) { *e &= ~attrib; }
-    inline void setFrame(PTEntry* e, PhysicalAddr addr) { *e = (*e & ~I86_PTE_FRAME) | addr; }
-    inline bool isPresent(PTEntry e) { return e & I86_PTE_PRESENT; }
-    inline bool isWriteable(PTEntry e) { return e & I86_PTE_WRITABLE; }
-    inline bool isUsable(PTEntry e) { return e & I86_PTE_USABLE; }
-    inline PhysicalAddr getPhysicalAddr(PTEntry e) { return e & I86_PTE_FRAME; }
-};
+    constexpr uint64_t physicalAddrMask = 0x000ffffffffff000;
+    struct Entry {
+        uint64_t data;
 
-//////////////////////////////////////// Page Directory Entry ////////////////////////////////////////
+        Entry(): data(0) {}
+        Entry(uint64_t value): data(value) {}
 
-enum PDEAttrib {
-    I86_PDE_PRESENT = 1,			//0000000000000000000000000000001
-    I86_PDE_WRITABLE = 2,			//0000000000000000000000000000010
-    I86_PDE_USER = 4,			//0000000000000000000000000000100
-    I86_PDE_PWT = 8,			//0000000000000000000000000001000
-    I86_PDE_PCD = 0x10,		//0000000000000000000000000010000
-    I86_PDE_ACCESSED = 0x20,		//0000000000000000000000000100000
-    I86_PDE_DIRTY = 0x40,		//0000000000000000000000001000000
-    I86_PDE_4MB = 0x80,		//0000000000000000000000010000000
-    I86_PDE_CPU_GLOBAL = 0x100,		//0000000000000000000000100000000
-    I86_PDE_LV4_GLOBAL = 0x200,		//0000000000000000000001000000000
-    I86_PDE_FRAME = 0x7FFFF000 	//1111111111111111111000000000000
-};
-using PDEntry = uint32_t;
+        inline void setFlags(uint64_t flags) { data |= flags; }
+        inline void removeFlags(uint64_t flags) { data &= (~flags); }
+        inline bool testFlag(FlagOffset flagOffset) const { return ((data >> flagOffset) & 1); }
 
-namespace pde {
-    static PDEntry defaultVal = 0;
-    inline void addAttrib(PDEntry* e, PDEAttrib attrib) { *e |= attrib; }
-    inline void delAttrib(PDEntry* e, PDEAttrib attrib) { *e &= ~attrib; }
-    inline void setFrame(PDEntry* e, PhysicalAddr addr) { *e = (*e & ~I86_PDE_FRAME) | addr; }
-    inline bool isPresent(PDEntry e) { return e & I86_PDE_PRESENT; }
-    inline bool isWriteable(PDEntry e) { return e & I86_PDE_WRITABLE; }
-    inline PhysicalAddr getPhysicalAddr(PTEntry e) { return e & I86_PDE_FRAME; }
-    inline bool isUser(PDEntry e) { return e & I86_PDE_USER; }
-    inline bool is4Mb(PDEntry e) { return e & I86_PDE_4MB; }
-};
-
-//////////////////////////////////////// PAGE TABLE ////////////////////////////////////////
-
-struct PageTable {
-    inline static constexpr int entryCnt = 1024;
-    PTEntry entries[entryCnt];
-    void Init() {
-        for (int i = 0; i < entryCnt; i++) {
-            entries[i] = pte::defaultVal;
+        inline PhysicalAddr getPhysicalAddr() const { return data & physicalAddrMask; }
+        inline void setPhysicalAdr(PhysicalAddr addr) {
+            removeFlags(physicalAddrMask);
+            data |= (addr & physicalAddrMask);
         }
-    }
-};
 
-//////////////////////////////////////// PAGE DIRECTORY ////////////////////////////////////////
+        inline bool isPresent() { return testFlag(PRESENT_FLAG); }
+        inline bool isWriteable() { return testFlag(WRITABLE); }
+        inline bool isUserAccessible() { return testFlag(USER_ACCESSIBLE); }
+        inline bool hasCaching() { return testFlag(CACHING); }
+        inline bool isCacheDisabled() { return testFlag(DISABLE_CACHE); }
+        inline bool isAccessed() { return testFlag(ACCESSED); }
+        inline bool isDirty() { return testFlag(DIRTY); }
+        inline bool isGlobal() { return testFlag(GLOBAL); }
+        inline bool isNoExecute() { return testFlag(NO_EXECUTE); }
+    };
 
-struct __attribute__((packed)) PageDirectory {
-    inline static constexpr int entryCnt = 1024;
-    PDEntry entries[entryCnt];
-    VirtualAddr vAddrs[entryCnt];
+    constexpr int entryCnt = 512;
+    constexpr int defaultEntry = 0;
 
-    void Init() {
-        for (int i = 0; i < entryCnt; i++) {
-            entries[i] = pde::defaultVal;
-            vAddrs[i] = 0;
+    enum TableLevel: uint64_t {
+        LEVEL0 = 0,
+        LEVEL1 = 1,
+        LEVEL2 = 2,
+        LEVEL3 = 3,
+    };
+    // Table level can be determined by looking at TABLE_LEVEL bits (9, 10) of first entry
+    struct Table {
+        Entry entries[entryCnt];
+        Table* nextTables[entryCnt];
+        Table() = default;
+
+        void init(TableLevel tableLevel) {
+            for (int i = 0; i < entryCnt; i++) {
+                entries[i] = defaultEntry;
+                nextTables[i] = nullptr;
+            }
+            setLevel(tableLevel);
         }
-    }
+
+        inline TableLevel getLevel() const {
+            return (TableLevel)(entries[0].testFlag(TABLE_LEVEL) + ((TableLevel)entries[0].testFlag(TABLE_LEVEL_2) << 1));
+        }
+
+        inline void setLevel(TableLevel level) {
+            entries[0].removeFlags((1LL << TABLE_LEVEL) | (1LL << TABLE_LEVEL_2));
+            entries[0].setFlags(level << TABLE_LEVEL);
+        }
+    };
 };

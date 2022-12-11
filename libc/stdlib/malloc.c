@@ -3,7 +3,7 @@
 #include <stdint-gcc.h>
 #include <kernel/memory/kheap.h>
 
-void* malloc(uint32_t size) {
+void* malloc(uint64_t size) {
 #if defined(__is_libk)
     return kmalloc(size);
 #else

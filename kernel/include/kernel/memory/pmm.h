@@ -2,20 +2,38 @@
 #include <stdio.h>
 #include <stdint-gcc.h>
 
-using PhysicalAddr = uint32_t;
+using PhysicalAddr = uint64_t;
+
+struct MemRange {
+    uint64_t start, size;
+};
+
+struct PhysicalMemMap {
+    PhysicalMemMap() {
+        totalSize = availMemArrCnt = kernelStart = kernelSize = 0;
+        availableMemArr = nullptr;
+    }
+    uint64_t totalSize;
+    MemRange* availableMemArr;
+    uint64_t availMemArrCnt;
+    uint64_t kernelStart, kernelSize;
+};
+
 
 class PMM {
 public:
-    static constexpr int framesPerByte = 8;
-    static constexpr int framesPerElement = 32;
-    static constexpr int frameSize = 4096;
-    static constexpr int frameAlignment = 4096;
+    static constexpr int64_t framesPerByte = 8;
+    static constexpr int64_t framesPerElement = 64;
+    static constexpr int64_t elementSize = 8;
+    static constexpr int64_t frameSize = 4096;
+    static constexpr int64_t frameAlignment = 4096;
 
-    uint32_t memorySize, usedframes, frameCnt;
-    uint32_t* bitmap;
+    uint64_t memorySize;
+    int64_t usedframes, frameCnt;
+    uint64_t* bitmap;
 
 private:
-    PMM() {}
+    PMM() { memorySize = usedframes = frameCnt = 0; bitmap = nullptr; }
     PMM(const PMM&);
     void operator=(const PMM&);
 public:
@@ -24,35 +42,36 @@ public:
         return pmm;
     }
 
-    // kernel_end_mem MUST be 4K aligned
-    void init(uint32_t memSize, uint32_t* kernel_end_mem, uint32_t ramEnd);
+    // MemRanges in this map MUST be 4k aligned.
+    // Returns the extra memory range used by pmm during initialization.
+    MemRange init(const PhysicalMemMap& mem);
 
-    inline void bitmapSet(int bit) {
-        bitmap[bit / framesPerElement] |= (1 << (bit % framesPerElement));
+    inline void bitmapSet(int64_t bit) {
+        bitmap[bit / framesPerElement] |= (1LL << (bit % framesPerElement));
     }
 
-    inline void bitmapUnset(int bit) {
-        bitmap[bit / framesPerElement] &= ~(1 << (bit % framesPerElement));
+    inline void bitmapUnset(int64_t bit) {
+        bitmap[bit / framesPerElement] &= ~(1LL << (bit % framesPerElement));
     }
 
-    inline bool bitmapIsSet(int bit) {
-        return bitmap[bit / framesPerElement] & (1 << (bit % framesPerElement));
+    inline bool bitmapIsSet(int64_t bit) {
+        return bitmap[bit / framesPerElement] & (1LL << (bit % framesPerElement));
     }
 
-    inline int elementCnt() {
-        return frameCnt / framesPerElement;
+    inline int64_t elementCnt() {
+        return (int64_t)(frameCnt + framesPerElement - 1) / framesPerElement;
     }
 
-    inline PhysicalAddr getFrameAddr(int frame) { return (frame << 12); }
+    inline PhysicalAddr getFrameAddr(int64_t frame) { return (frame << 12); }
 
     inline PhysicalAddr endMemory() { return (PhysicalAddr)bitmap + elementCnt(); }
-    int firstFreeFrame();
-    int firstNFreeFrames(int n);
+    int64_t firstFreeFrame();
+    int64_t firstNFreeFrames(int64_t n);
 
-    void initRegion(PhysicalAddr start, uint32_t size);
-    void deinitRegion(PhysicalAddr start, uint32_t size);
+    void initRegion(PhysicalAddr start, uint64_t size);
+    void deinitRegion(PhysicalAddr start, uint64_t size);
 
-    void* allocFrame();
-    void* allocNFrames(int n);
-    void freeFrame(void* addr);
+    PhysicalAddr allocFrame();
+    PhysicalAddr allocNFrames(int64_t n);
+    void freeFrame(PhysicalAddr addr);
 };

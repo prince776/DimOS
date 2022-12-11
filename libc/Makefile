@@ -13,7 +13,26 @@ EXEC_PREFIX?=$(PREFIX)
 INCLUDEDIR?=$(PREFIX)/include
 LIBDIR?=$(EXEC_PREFIX)/lib
 
-CFLAGS:=$(CFLAGS) -ffreestanding -Wall -Wextra -fstack-protector-strong
+
+CFLAGS:=$(CFLAGS) -Wall  \
+	-Wextra 			 \
+    -std=c11             \
+    -ffreestanding       \
+    -fno-stack-protector \
+    -fno-stack-check     \
+    -fno-lto             \
+    -fno-pie             \
+    -fno-pic             \
+    -m64                 \
+    -march=x86-64        \
+    -mabi=sysv           \
+    -mno-80387           \
+    -mno-mmx             \
+    -mno-sse             \
+    -mno-sse2            \
+    -mno-red-zone        \
+    -mcmodel=kernel      \
+    -MMD
 CPPFLAGS:=$(CPPFLAGS) -D__is_libc -Iinclude -mgeneral-regs-only
 LIBK_CFLAGS:=$(CFLAGS)
 LIBK_CPPFLAGS:=$(CPPFLAGS) -D__is_libk

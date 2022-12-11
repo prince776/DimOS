@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint-gcc.h>
 
 static bool print(const char* data, size_t length) {
 	const unsigned char* bytes = (const unsigned char*)data;
@@ -46,6 +47,72 @@ static bool print_unsigned_decimal(unsigned int val)
 		if (val == 0) break;
 		pos--;
 	}
+	int res = printf(str + pos);
+	return res != -1;
+}
+
+
+static bool print_decimal_64(int64_t val)
+{
+	char str[22];
+	str[21] = 0;
+	int pos = 20;
+	bool negative = val < 0;
+	if (val < 0) val *= -1;
+	while (pos >= 0)
+	{
+		str[pos] = '0' + (val % 10);
+		val /= 10;
+		if (val == 0) break;
+		pos--;
+	}
+	if (negative) {
+		str[--pos] = '-';
+	}
+
+	int res = printf(str + pos);
+	return res != -1;
+}
+
+static bool print_unsigned_decimal_64(uint64_t val)
+{
+	char str[22];
+	str[21] = 0;
+	int pos = 20;
+	while (pos >= 0)
+	{
+		str[pos] = '0' + (val % 10);
+		val /= 10;
+		if (val == 0) break;
+		pos--;
+	}
+	int res = printf(str + pos);
+	return res != -1;
+}
+
+static bool print_hex_64(uint64_t val)
+{
+	char str[22];
+	str[21] = 0;
+	int pos = 20;
+	while (pos >= 0)
+	{
+		int x = (val % 16);
+		if (x <= 9) {
+			str[pos] = '0' + x;
+		}
+		else {
+			x -= 10;
+			str[pos] = 'a' + x;
+		}
+		val /= 16;
+		if (val == 0) break;
+		pos--;
+	}
+	pos--;
+	str[pos] = 'x';
+	pos--;
+	str[pos] = '0';
 	int res = printf(str + pos);
 	return res != -1;
 }
@@ -112,14 +179,36 @@ int printf(const char* restrict format, ...) {
 				return -1;
 			written++;
 		}
-		else if (*format == 'u') {
+		else if (*format == 'l') {
 			format++;
-			unsigned int d = (unsigned int)va_arg(parameters, int);
+			int64_t d = va_arg(parameters, long long);
 			if (!maxrem) {
 				// TODO: Set errno to EOVERFLOW.
 				return -1;
 			}
-			if (!print_unsigned_decimal(d))
+			if (!print_decimal_64(d))
+				return -1;
+			written++;
+		}
+		else if (*format == 'u') {
+			format++;
+			uint64_t d = (uint64_t)va_arg(parameters, long long);
+			if (!maxrem) {
+				// TODO: Set errno to EOVERFLOW.
+				return -1;
+			}
+			if (!print_unsigned_decimal_64(d))
+				return -1;
+			written++;
+		}
+		else if (*format == 'x') {
+			format++;
+			uint64_t d = (uint64_t)va_arg(parameters, long long);
+			if (!maxrem) {
+				// TODO: Set errno to EOVERFLOW.
+				return -1;
+			}
+			if (!print_hex_64(d))
 				return -1;
 			written++;
 		}
