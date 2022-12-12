@@ -8,6 +8,8 @@
 #include <demo/demo.h>
 #include <kernel/memory/pmm.h>
 #include <kernel/memory/vmm.h>
+#include <kernel/memory/heap.h>
+#include <kernel/memory/kheap.h>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -91,69 +93,33 @@ extern "C" void kernel_main(void) {
     auto kernelAddr = kerenel_address_request.response;
     auto hhdmRes = hhdm_request.response;
     HHDMOffset = hhdmRes->offset;
-    // ******************************************************************************//
     printf("Kernel Addr-> Physical: %x Virtual: %x\n", kernelAddr->physical_base, kernelAddr->virtual_base);
     printf("HHDM offset: %x\n", hhdmRes->offset);
+    // ******************************************************************************//
 
-    // __asm__ volatile ("int $0x10");
+    __asm__ volatile ("int $0x10"); // Test interrupt
 
     auto pmmMemRange = PMM::get().init(physcialMemMap);
-
-    { // test code remove together
-        PhysicalAddr testFrame = PMM::get().allocFrame();
-        printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-        testFrame = PMM::get().allocFrame();
-        printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-        testFrame = PMM::get().allocFrame();
-        printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-        testFrame = PMM::get().allocFrame();
-        printf("Allocated memory: %x, %x\n", testFrame, testFrame + HHDMOffset);
-        pmmMemRange.size += 0x4000;
-    }
-
     VMM::get().init(physcialMemMap, &pmmMemRange, 1);
-    printf("Alright, My Paging system is in use now!\n");
-    for (int i = 0; i < 5; i++)
-    {
-        VirtualAddr newPage = VMM::get().allocPage(true);
-        printf("New Page is at: %x\n", newPage);
-        int* x = (int*)newPage;
-        *x = 100;
-        printf("Value at this page is %d\n", *x);
+    MallocHeap::init();
+
+    printf("Memory Management System Activated!\n");
+
+    { // Test kernel heap
+        int* ptr = (int*)malloc(5000);
+        *ptr = 5;
+        printf("Some data I have at addr: %x is: %d\n", ptr, *ptr);
+        free(ptr);
+        ptr = new int(10);
+        printf("Some data I have at addr: %x is: %d\n", ptr, *ptr);
+
+        int* arr = new int[5];
+        for (int i = 0; i < 5; i++) arr[i] = i + 1;
+        for (int i = 0; i < 5; i++)
+            printf("Array at idx %d is: %d\n", i, arr[i]);
+
+        MallocHeap::get().print();
     }
-    VirtualAddr newPage = VMM::get().allocNPages(true, 12);
-    printf("New continuous 12 Pages are at: %x\n", newPage);
-    int* x = (int*)newPage;
-    *x = 100;
-    // Trying page fault
-    // {
-    //     printf("Value at this page is %d\n", *x);
-    //     x = (int*)((uint64_t)x + 12 * VMM::pageSize);
-    //     printf("[Trying Page Fault] Value at this page is %d\n", *x);
-    // }
-
-    x = new int;
-    *x = 3456;
-    printf("New allocated int: %x, %d\n", x, *x);
-    x = new int;
-    *x = 3456;
-    printf("New allocated int: %x, %d\n", x, *x);
-
-    // MallocHeap::init();
-
-    // int* ptr = (int*)malloc(5000);
-    // *ptr = 5;
-    // printf("Some data I have at addr: %x is: %d\n", ptr, *ptr);
-    // free(ptr);
-    // ptr = new int(10);
-    // printf("Some data I have at addr: %x is: %d\n", ptr, *ptr);
-
-    // int* arr = new int[5];
-    // for (int i = 0; i < 5; i++) arr[i] = i + 1;
-    // for (int i = 0; i < 5; i++)
-    //     printf("Array at idx %d is: %d\n", i, arr[i]);
-
-    // MallocHeap::get().print();
 
     panic("Nothing to do");
 }

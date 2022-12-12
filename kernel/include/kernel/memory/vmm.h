@@ -6,7 +6,7 @@
 
 // IMP THING:
 // VirtualAddr of PTE != VirtualAddr of Page it helps translate to
-// it's obvious in hindsight, but easy to miss.
+// it's obvious in hindsight, but easy to confuse sometimes.
 
 constexpr int VMMTableLevelCnt = 4;
 struct IndexOffset {
