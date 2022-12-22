@@ -80,7 +80,7 @@ dimos.kernel: $(OBJS) $(ARCHDIR)/linker.ld
 	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
 
 .cpp.o:
-	$(CXX) -MD -c $< -o $@ -std=c++17 $(CFLAGS) $(CPPFLAGS)
+	$(CXX) -MD -c $< -o $@ -std=c++20 $(CFLAGS) $(CPPFLAGS)
 
 .S.o:
 	$(CC) -MD -c $< -o $@ $(CFLAGS) $(CPPFLAGS)

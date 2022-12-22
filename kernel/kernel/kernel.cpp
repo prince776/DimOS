@@ -10,6 +10,7 @@
 #include <kernel/memory/vmm.h>
 #include <kernel/memory/heap.h>
 #include <kernel/memory/kheap.h>
+#include <kernel/cpp/unique-ptr.hpp>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -119,6 +120,16 @@ extern "C" void kernel_main(void) {
             printf("Array at idx %d is: %d\n", i, arr[i]);
 
         MallocHeap::get().print();
+    }
+
+    {
+        UniquePtr<int> ptr = makeUnique<int>(2345);
+        printf("Some data I have is: %d\n", *ptr);
+        UniquePtr<int[]> arr = makeUnique<int[]>(5);
+        for (int i = 0; i < 5; i++)
+            arr[i] = 1 + i;
+        for (int i = 0; i < 5; i++)
+            printf("Array at idx %d is: %d\n", i, arr[i]);
     }
 
     panic("Nothing to do");

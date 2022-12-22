@@ -9,7 +9,7 @@
       ],
       "compilerPath": "/usr/local/homebrew/bin/i686-elf-gcc",
       "cStandard": "gnu11",
-      "cppStandard": "c++17",
+      "cppStandard": "c++20",
       "intelliSenseMode": "macos-gcc-x86",
       "configurationProvider": "ms-vscode.makefile-tools"
     }
