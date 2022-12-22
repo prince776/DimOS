@@ -11,6 +11,7 @@
 #include <kernel/memory/heap.h>
 #include <kernel/memory/kheap.h>
 #include <kernel/cpp/unique-ptr.hpp>
+#include <kernel/cpp/vector.hpp>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -130,6 +131,25 @@ extern "C" void kernel_main(void) {
             arr[i] = 1 + i;
         for (int i = 0; i < 5; i++)
             printf("Array at idx %d is: %d\n", i, arr[i]);
+
+        auto printVec = [](Vector<int>& v) {
+            printf("Vector: ");
+            for (const auto& x : v) {
+                printf("%d ", x);
+            }
+            printf("\n");
+        };
+
+        Vector<int> v(5, 10);
+        printVec(v);
+        v[2] = 100;
+        v.push_back(12);
+        v.push_back(134);
+        printVec(v);
+        v.resize(10);
+        printVec(v);
+        v.resize(3);
+        printVec(v);
     }
 
     panic("Nothing to do");

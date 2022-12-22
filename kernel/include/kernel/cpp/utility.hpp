@@ -21,3 +21,11 @@ constexpr void assert(bool condition) {
         panic("Assert failed.");
     }
 }
+
+template<typename T>
+constexpr const T& min(const T& a, const T& b) {
+    if (a < b) {
+        return a;
+    }
+    return b;
+}
