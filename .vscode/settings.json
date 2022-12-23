@@ -2,7 +2,8 @@
   "files.associations": {
     "*.h": "cpp"
   },
-  "lldb.displayFormat": "auto",
+  "lldb.displayFormat": "hex",
   "lldb.dereferencePointers": true,
-  "lldb.consoleMode": "commands"
+  "lldb.consoleMode": "commands",
+  "lldb.showDisassembly": "auto"
 }

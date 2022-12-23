@@ -17,6 +17,10 @@ public:
         return *this;
     }
 
+    // Delete copy ones
+    UniquePtr(const UniquePtr& lhs) = delete;
+    UniquePtr& operator=(const UniquePtr& lhs) = delete;
+
     T* release() noexcept {
         auto oldPtr = ptr;
         ptr = nullptr;
@@ -26,7 +30,7 @@ public:
     void reset(T* newPtr = nullptr) noexcept {
         auto oldPtr = ptr;
         ptr = newPtr;
-        if (oldPtr) {
+        if (oldPtr != nullptr) {
             delete oldPtr;
         }
     }
@@ -69,7 +73,7 @@ public:
     void reset(T* newPtr = nullptr) noexcept {
         auto oldPtr = ptr;
         ptr = newPtr;
-        if (oldPtr) {
+        if (oldPtr != nullptr) {
             delete[] oldPtr;
         }
     }
