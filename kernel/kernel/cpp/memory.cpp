@@ -17,7 +17,17 @@ void operator delete(void* p)
     free(p);
 }
 
+void operator delete(void* p, unsigned long x)
+{
+    free(p);
+}
+
 void operator delete[](void* p)
+{
+    free(p);
+}
+
+void operator delete[](void* p, unsigned long x)
 {
     free(p);
 }

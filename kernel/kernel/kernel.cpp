@@ -12,6 +12,7 @@
 #include <kernel/memory/kheap.h>
 #include <kernel/cpp/unique-ptr.hpp>
 #include <kernel/cpp/vector.hpp>
+#include <kernel/process/kthread.h>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -58,6 +59,30 @@ extern "C" void kernel_early() {
     }
 }
 
+extern "C" void yield(kernel::Thread*);
+
+Vector<kernel::Thread>* kthreadsPtr = nullptr;
+size_t currKThreadIdx = 0;
+
+void kthread1() {
+    // How to get the ptr to current thread's control block?
+    auto& kthread = *kthreadsPtr;
+    printf("Thread type 1 executed\n");
+    yield(&kernel::thisThread());
+    printf("Thread type 1 executed 2nd time\n");
+    kernel::thisThread().finished = true;
+    yield(&kernel::thisThread());
+} // Must not return out of a kernel thread
+
+void kthread2() {
+    printf("Thread type 2 executed\n");
+    yield(&kernel::thisThread());
+    printf("Thread type 2 executed 2nd time\n");
+    kernel::thisThread().finished = true;
+    yield(&kernel::thisThread());
+} // Must not return out of a kernel thread
+
+
 extern "C" void kernel_main(void) {
 
     // *************** Parse the Memory Map **************************//
@@ -73,7 +98,6 @@ extern "C" void kernel_main(void) {
             physcialMemMap.availMemArrCnt++;
         }
     }
-    printf("------------------------------------------------------------------------\n");
     MemRange physicalRange[physcialMemMap.availMemArrCnt];
     for (int i = 0, j = 0; i < memArrLen; i++) {
         auto memEntry = memArr[i];
@@ -97,60 +121,24 @@ extern "C" void kernel_main(void) {
     HHDMOffset = hhdmRes->offset;
     printf("Kernel Addr-> Physical: %x Virtual: %x\n", kernelAddr->physical_base, kernelAddr->virtual_base);
     printf("HHDM offset: %x\n", hhdmRes->offset);
+    printf("------------------------------------------------------------------------\n");
     // ******************************************************************************//
-
-    __asm__ volatile ("int $0x10"); // Test interrupt
 
     auto pmmMemRange = PMM::get().init(physcialMemMap);
     VMM::get().init(physcialMemMap, &pmmMemRange, 1);
     MallocHeap::init();
-
     printf("Memory Management System Activated!\n");
 
-    { // Test kernel heap
-        int* ptr = (int*)malloc(5000);
-        *ptr = 5;
-        printf("Some data I have at addr: %x is: %d\n", ptr, *ptr);
-        free(ptr);
-        ptr = new int(10);
-        printf("Some data I have at addr: %x is: %d\n", ptr, *ptr);
+    Vector<kernel::Thread> local;
+    kthreadsPtr = &local;
+    local.push_back(kernel::Thread((uint64_t)&kthread1));
+    local.push_back(kernel::Thread((uint64_t)&kthread2));
 
-        int* arr = new int[5];
-        for (int i = 0; i < 5; i++) arr[i] = i + 1;
-        for (int i = 0; i < 5; i++)
-            printf("Array at idx %d is: %d\n", i, arr[i]);
-
-        MallocHeap::get().print();
-    }
-
-    {
-        UniquePtr<int> ptr = makeUnique<int>(2345);
-        printf("Some data I have is: %d\n", *ptr);
-        UniquePtr<int[]> arr = makeUnique<int[]>(5);
-        for (int i = 0; i < 5; i++)
-            arr[i] = 1 + i;
-        for (int i = 0; i < 5; i++)
-            printf("Array at idx %d is: %d\n", i, arr[i]);
-
-        auto printVec = [](Vector<int>& v) {
-            printf("Vector: ");
-            for (const auto& x : v) {
-                printf("%d ", x);
-            }
-            printf("\n");
-        };
-
-        Vector<int> v(5, 10);
-        printVec(v);
-        v[2] = 100;
-        v.push_back(12);
-        v.push_back(134);
-        printVec(v);
-        v.resize(10);
-        printVec(v);
-        v.resize(3);
-        printVec(v);
-    }
+    kernel::Thread tempThread;
+    kernel::ContextStack tempContext;
+    tempContext.controlBlock = &tempThread;
+    tempContext.controlBlock = &tempThread;
+    scheduleKThread(&tempContext);
 
     panic("Nothing to do");
 }
