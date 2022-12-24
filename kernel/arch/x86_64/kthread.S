@@ -10,7 +10,7 @@ yield: // takes a pointer to control block of kthread that called yield
     pusha64
     pushq %rsp
 
-    movq %rsp, %rdi     // get the stack pointer as param to switch_task
+    movq %rsp, %rdi     // get the stack pointer as param to scheduleKThread
     call scheduleKThread
 
     exec_continuation:

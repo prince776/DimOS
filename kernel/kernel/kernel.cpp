@@ -13,6 +13,7 @@
 #include <kernel/cpp/unique-ptr.hpp>
 #include <kernel/cpp/vector.hpp>
 #include <kernel/process/kthread.h>
+#include <kernel/devices/pit.h>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -138,7 +139,9 @@ extern "C" void kernel_main(void) {
     kernel::ContextStack tempContext;
     tempContext.controlBlock = &tempThread;
     tempContext.controlBlock = &tempThread;
-    scheduleKThread(&tempContext);
 
+    pit::init(0xffff);
+
+    scheduleKThread(&tempContext);
     panic("Nothing to do");
 }
