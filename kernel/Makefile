@@ -59,6 +59,7 @@ kernel/memory/heap.o \
 kernel/memory/kheap.o \
 kernel/cpp/memory.o \
 kernel/process/kthread.o \
+kernel/devices/pic.o \
 kernel/demo/demo.o
 
 OBJS=\

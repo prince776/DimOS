@@ -1,5 +1,6 @@
 #include <stdint-gcc.h>
 #include "descriptor_tables.h"
+#include <kernel/devices/pic.h>
 
 static void init_gdt();
 static void init_idt();
@@ -51,8 +52,14 @@ static void init_idt()
     idtPtr.limit = (uint16_t)(sizeof(IDTEntry) * IDT_MAX_DESCRIPTORS - 1);
 
     for (uint8_t vector = 0; vector < 32; vector++) {
+        idt_set_descriptor(vector, isr_stub_table[vector], 0x8E); // This flag means, 64 bit interrupt gate(not trap) + present
+        // this means interrupts will be disabled in these ISRs
+    }
+    pic::remap();
+    for (uint8_t vector = pic::PIC1Offset; vector < pic::PIC2End; vector++) { // Set ISRs for remapped PIC Interrupts
         idt_set_descriptor(vector, isr_stub_table[vector], 0x8E);
     }
+
     idt_reload(&idtPtr);
 }
 

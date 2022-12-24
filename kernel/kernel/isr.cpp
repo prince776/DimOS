@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdio.h>
 #include <kernel/common.h>
+#include <kernel/devices/pic.h>
 
 isr_handler_t interrupt_handlers[256];
 
@@ -10,6 +11,10 @@ extern "C" void isr_handler(ISRFrame * frame) {
     if (interrupt_handlers[isrNum] != 0) {
         isr_handler_t handler = interrupt_handlers[isrNum];
         handler(frame);
+
+        if (isrNum >= pic::PIC1Offset && isrNum < pic::PIC2End) {
+            pic::signalEOI(isrNum);
+        }
     }
     else {
         printf("Unhandled interrupt: %x\n", isrNum);
