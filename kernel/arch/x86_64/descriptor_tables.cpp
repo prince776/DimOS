@@ -1,6 +1,7 @@
 #include <stdint-gcc.h>
 #include "descriptor_tables.h"
 #include <kernel/devices/pic.h>
+#include <kernel/x64.h>
 
 static void init_gdt();
 static void init_idt();
@@ -9,6 +10,7 @@ extern "C" void init_descriptor_tables()
 {
     init_gdt();
     init_idt();
+    asm("sti");
 }
 
 // -------------- Stuff related to GDT --------------
