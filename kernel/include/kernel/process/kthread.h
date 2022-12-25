@@ -1,8 +1,9 @@
 #pragma once
+#include <stdlib.h>
 #include <kernel/cpu.h>
 #include <kernel/cpp/unique-ptr.hpp>
 #include <kernel/cpp/vector.hpp>
-#include <stdlib.h>
+#include <kernel/isr.h>
 
 namespace kernel {
     class Thread;
@@ -11,6 +12,7 @@ namespace kernel {
         uint64_t rsp = 0; // stack pointer
         cpu::GenRegisters genRegisters{};
         uint64_t rip = 0; // instruction pointer
+        uint64_t rflags = 514; // duh
         Thread* controlBlock = nullptr;
         ContextStack() = default;
     };
@@ -26,6 +28,8 @@ namespace kernel {
         uint64_t rip = 0; // instruction pointer
         cpu::GenRegisters genRegisters{};
 
+        uint64_t rflags = 514;
+        bool started = false;
         uint64_t id = 0;
         UniquePtr<StackSpace> stackMem;
         bool finished = false;
@@ -44,6 +48,7 @@ namespace kernel {
             genRegisters = context.genRegisters;
             rsp = context.rsp;
             rip = context.rip;
+            rflags = context.rflags;
         }
 
     private:
@@ -52,7 +57,10 @@ namespace kernel {
 }
 
 extern "C" void scheduleKThread(kernel::ContextStack * prevContext);
-extern "C" void switch_kthread(kernel::Thread * thread);
+extern "C" void return_from_yield(kernel::Thread * thread);
+extern "C" void return_from_interrupt(kernel::Thread * thread);
 namespace kernel {
     Thread& thisThread();
 }
+
+void premptiveScheduler(ISRFrame* isrFrame);
