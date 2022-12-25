@@ -120,6 +120,8 @@ isr_stub_table:
 
 .include "arch/x86_64/common.S"
 
+.globl interrupt_return_position
+
 isr_common_stub:
     cld
     pusha64
@@ -127,6 +129,7 @@ isr_common_stub:
     movq %rsp, %rdi     // get the stack pointer as param to isr_handler
     call isr_handler
 
+interrupt_return_position:
     popa64
     add $16, %rsp
 

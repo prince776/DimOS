@@ -14,6 +14,7 @@
 #include <kernel/cpp/vector.hpp>
 #include <kernel/process/kthread.h>
 #include <kernel/devices/pit.h>
+#include <kernel/isr.h>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -60,6 +61,7 @@ extern "C" void kernel_early() {
     }
 }
 
+// TODO: Yield is outdated, since KThread ContextStack was updated, use after fixing
 extern "C" void yield(kernel::Thread*);
 
 Vector<kernel::Thread>* kthreadsPtr = nullptr;
@@ -67,22 +69,33 @@ size_t currKThreadIdx = 0;
 
 void kthread1() {
     // How to get the ptr to current thread's control block?
-    auto& kthread = *kthreadsPtr;
     printf("Thread type 1 executed\n");
-    yield(&kernel::thisThread());
-    printf("Thread type 1 executed 2nd time\n");
+    volatile int sum = 0;
+    for (int i = 0; i < 30000000; i++) {
+        sum |= i;
+        if (i % 10000000 == 0) printf("Type 1 executed more\n");
+    }
+    // yield(&kernel::thisThread());
+    printf("Thread type 1 executed final time\n");
     kernel::thisThread().finished = true;
-    yield(&kernel::thisThread());
+
+    panic("Nothing to do for thread 1\n");
+    // yield(&kernel::thisThread());
 } // Must not return out of a kernel thread
 
 void kthread2() {
     printf("Thread type 2 executed\n");
-    yield(&kernel::thisThread());
-    printf("Thread type 2 executed 2nd time\n");
+    volatile int sum = 0;
+    for (int i = 0; i < 30000000; i++) {
+        sum |= i;
+        if (i % 10000000 == 0) printf("Type 2 executed more\n");
+    }
+    // yield(&kernel::thisThread());
+    printf("Thread type 2 executed final time\n");
     kernel::thisThread().finished = true;
-    yield(&kernel::thisThread());
+    // yield(&kernel::thisThread());
+    panic("Nothing to do for thread 2\n");
 } // Must not return out of a kernel thread
-
 
 extern "C" void kernel_main(void) {
 
@@ -132,16 +145,23 @@ extern "C" void kernel_main(void) {
 
     Vector<kernel::Thread> local;
     kthreadsPtr = &local;
+
+    // Insert a finished thread that represents curr thread.
+    local.push_back(kernel::Thread(0));
+    local[0].finished = true;
+
     local.push_back(kernel::Thread((uint64_t)&kthread1));
     local.push_back(kernel::Thread((uint64_t)&kthread2));
 
-    kernel::Thread tempThread;
-    kernel::ContextStack tempContext;
-    tempContext.controlBlock = &tempThread;
-    tempContext.controlBlock = &tempThread;
 
-    pit::init(0xffff);
+    for (auto& x : local) {
+        printf("KThread: rsp: %x, rip: %x, id: %d \n", x.rsp, x.rip, x.id);
+    }
 
-    scheduleKThread(&tempContext);
-    panic("Nothing to do");
+    {
+        registerInterruptHandler(pic::PIC1Offset, premptiveScheduler);
+        pit::init(0xffff);
+    }
+
+    panic("Nothing to do\n");
 }
