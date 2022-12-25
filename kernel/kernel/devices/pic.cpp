@@ -78,7 +78,7 @@ namespace pic {
         io_outb(port, value);
     }
 
-    void signalEOI(uint64_t isrNumber) {
+    extern "C" void signalEOI(uint64_t isrNumber) {
         if (isrNumber >= 40)				// if the IRQ came from the slave PIC
             io_outb(PIC2_COMMAND, 0x20);
 

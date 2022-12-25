@@ -18,5 +18,5 @@ namespace pic {
     void remap();
     void maskLine(uint8_t irqLine);
     void clearMask(uint8_t irqLine);
-    void signalEOI(uint64_t isrNumber);
+    extern "C" void signalEOI(uint64_t isrNumber);
 }

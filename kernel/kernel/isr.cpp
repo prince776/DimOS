@@ -11,12 +11,21 @@ static int pitCount = 0;
 
 extern "C" void isr_handler(ISRFrame * frame) {
     auto isrNum = frame->isrNumber;
-    if (interrupt_handlers[isrNum] != 0) {
+    if (isrNum < 256 && interrupt_handlers[isrNum] != 0) {
         isr_handler_t handler = interrupt_handlers[isrNum];
         handler(frame);
     }
     else {
         printf("Unhandled interrupt: %x\n", isrNum);
+
+        { // code to stall execution a bit to properly see what chain of interrupts happen
+            volatile int sum = 0;
+            for (int i = 0; i < 100000000; i++) {
+                sum |= i;
+                if (i % 10000000 == 0) printf(".");
+            }
+            printf("did some summing: %d\n", sum);
+        }
     }
 
 
