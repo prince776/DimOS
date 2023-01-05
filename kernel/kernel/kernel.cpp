@@ -15,6 +15,7 @@
 #include <kernel/process/kthread.h>
 #include <kernel/devices/pit.h>
 #include <kernel/isr.h>
+#include <kernel/concurrency/primitives.h>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -97,6 +98,21 @@ void kthread2() {
     panic("Nothing to do for thread 2\n");
 } // Must not return out of a kernel thread
 
+int64_t counter = 0;
+constexpr int CNT = 1e8 - 4567;
+MutexLock lock;
+
+void func() {
+    for (int64_t i = 0; i < CNT; i++) {
+        lock.acquireLock();
+        counter ^= i;
+        lock.releaseLock();
+    }
+    printf("Final Value: %l\n", counter);
+    kernel::thisThread().finished = true;
+    panic("Thread end");
+}
+
 extern "C" void kernel_main(void) {
 
     // *************** Parse the Memory Map **************************//
@@ -150,17 +166,27 @@ extern "C" void kernel_main(void) {
     local.push_back(kernel::Thread(0));
     local[0].finished = true;
 
-    local.push_back(kernel::Thread((uint64_t)&kthread1));
-    local.push_back(kernel::Thread((uint64_t)&kthread2));
+    // local.push_back(kernel::Thread((uint64_t)&kthread1));
+    // local.push_back(kernel::Thread((uint64_t)&kthread2));
+    // local.push_back(kernel::Thread((uint64_t)&kthread2));
+    // local.push_back(kernel::Thread((uint64_t)&kthread2));
+    // local.push_back(kernel::Thread((uint64_t)&kthread2));
+    local.push_back(kernel::Thread((uint64_t)&func));
+    local.push_back(kernel::Thread((uint64_t)&func));
+    local.push_back(kernel::Thread((uint64_t)&func));
 
+    // for (auto& x : local) {
+    //     printf("KThread: rsp: %x, rip: %x, id: %d \n", x.rsp, x.rip, x.id);
+    // }
 
-    for (auto& x : local) {
-        printf("KThread: rsp: %x, rip: %x, id: %d \n", x.rsp, x.rip, x.id);
+    for (int64_t i = 0; i < CNT; i++) {
+        counter ^= i;
     }
-
+    printf("Final Value: %l\n", counter);
+    counter = 0;
     {
         registerInterruptHandler(pic::PIC1Offset, premptiveScheduler);
-        pit::init(0xffff);
+        pit::init(1);
     }
 
     panic("Nothing to do\n");

@@ -8,6 +8,7 @@ extern Vector<kernel::Thread>* kthreadsPtr;
 extern size_t currKThreadIdx;
 
 extern "C" void scheduleKThread(kernel::ContextStack * prevContext) {
+    printf("CONTEXT SWITCHED\n");
     auto* prevThread = prevContext->controlBlock;
     auto& kthreads = *kthreadsPtr;
     size_t prevIndex = kthreads.size();
