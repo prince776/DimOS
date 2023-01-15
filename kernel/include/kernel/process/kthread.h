@@ -5,9 +5,9 @@
 #include <kernel/cpp/vector.hpp>
 #include <kernel/isr.h>
 
-void kthreadRunWrapper();
-
 namespace kernel {
+    void threadRunWrapper();
+
     class Thread;
 
     struct ExecContext {
@@ -43,7 +43,7 @@ namespace kernel {
             id = currId++;
 
             stackMem = makeUnique<StackSpace>();
-            execContext.rip = (uint64_t)&kthreadRunWrapper;
+            execContext.rip = (uint64_t)&threadRunWrapper;
             execContext.rsp = (uint64_t)stackMem.get() + stackSize - 4096;
         }
 
@@ -56,22 +56,25 @@ namespace kernel {
 
     };
 
+
+    // TODO: This results in calling signalEOI even though PIT didn't do the interrupt
+    // Can result in signalling EOI improperly.
+    inline void yield() {
+        __asm__ volatile ("int $0x20");
+    }
+
+    Thread& thisThread();
+
+    inline void threadRunWrapper() {
+        thisThread().runFunc();
+        thisThread().finished = true;
+        yield();
+    }
+
 }
 
 extern "C" void scheduleKernelThread(Vector<kernel::Thread> &threads, kernel::Thread & prevThread);
 extern "C" void return_from_interrupt(kernel::Thread * thread);
-namespace kernel {
-    Thread& thisThread();
-}
 
 void premptiveScheduler(ISRFrame* isrFrame);
 
-inline void yield() {
-    __asm__ volatile ("int $0x20");
-}
-
-inline void kthreadRunWrapper() {
-    kernel::thisThread().runFunc();
-    kernel::thisThread().finished = true;
-    yield();
-}
