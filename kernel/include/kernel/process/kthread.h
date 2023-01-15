@@ -5,16 +5,19 @@
 #include <kernel/cpp/vector.hpp>
 #include <kernel/isr.h>
 
+void kthreadRunWrapper();
+
 namespace kernel {
     class Thread;
 
-    struct ContextStack {
+    struct ExecContext {
         uint64_t rsp = 0; // stack pointer
-        cpu::GenRegisters genRegisters{};
         uint64_t rip = 0; // instruction pointer
+        cpu::GenRegisters genRegisters{};
         uint64_t rflags = 514; // duh
-        Thread* controlBlock = nullptr;
-        ContextStack() = default;
+
+        ExecContext() = default;
+        ExecContext(uint64_t newRip): rip(newRip) {}
     };
 
     static constexpr uint64_t stackSize = 64 * 1024;
@@ -24,43 +27,51 @@ namespace kernel {
 
     class Thread {
     public:
-        uint64_t rsp = 0; // stack pointer
-        uint64_t rip = 0; // instruction pointer
-        cpu::GenRegisters genRegisters{};
+        ExecContext execContext;
 
-        uint64_t rflags = 514;
         bool started = false;
         uint64_t id = 0;
         UniquePtr<StackSpace> stackMem;
         bool finished = false;
+        void(*runFunc)(void);
 
         Thread() = default;
-        Thread(uint64_t newRip)
-            : rsp(), rip(newRip), genRegisters() {
+
+        Thread(void(*func)(void))
+            : runFunc(func) {
             static uint64_t currId = 1;
             id = currId++;
 
             stackMem = makeUnique<StackSpace>();
-            rsp = (uint64_t)stackMem.get() + stackSize - 4096;
+            execContext.rip = (uint64_t)&kthreadRunWrapper;
+            execContext.rsp = (uint64_t)stackMem.get() + stackSize - 4096;
         }
 
-        void copyContext(const ContextStack& context) {
-            genRegisters = context.genRegisters;
-            rsp = context.rsp;
-            rip = context.rip;
-            rflags = context.rflags;
+        void copyFromISRFrame(const ISRFrame& context) {
+            execContext.genRegisters = context.genRegisters;
+            execContext.rflags = context.interruptFrame.rflags;
+            execContext.rsp = context.interruptFrame.rsp;
+            execContext.rip = context.interruptFrame.rip;
         }
 
-    private:
     };
 
 }
 
-extern "C" void scheduleKThread(kernel::ContextStack * prevContext);
-extern "C" void return_from_yield(kernel::Thread * thread);
+extern "C" void scheduleKernelThread(Vector<kernel::Thread> &threads, kernel::Thread & prevThread);
 extern "C" void return_from_interrupt(kernel::Thread * thread);
 namespace kernel {
     Thread& thisThread();
 }
 
 void premptiveScheduler(ISRFrame* isrFrame);
+
+inline void yield() {
+    __asm__ volatile ("int $0x20");
+}
+
+inline void kthreadRunWrapper() {
+    kernel::thisThread().runFunc();
+    kernel::thisThread().finished = true;
+    yield();
+}

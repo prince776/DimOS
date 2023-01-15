@@ -62,55 +62,20 @@ extern "C" void kernel_early() {
     }
 }
 
-// TODO: Yield is outdated, since KThread ContextStack was updated, use after fixing
-extern "C" void yield(kernel::Thread*);
-
 Vector<kernel::Thread>* kthreadsPtr = nullptr;
 size_t currKThreadIdx = 0;
 
-void kthread1() {
-    // How to get the ptr to current thread's control block?
-    printf("Thread type 1 executed\n");
-    volatile int sum = 0;
-    for (int i = 0; i < 30000000; i++) {
-        sum |= i;
-        if (i % 10000000 == 0) printf("Type 1 executed more\n");
-    }
-    // yield(&kernel::thisThread());
-    printf("Thread type 1 executed final time\n");
-    kernel::thisThread().finished = true;
-
-    panic("Nothing to do for thread 1\n");
-    // yield(&kernel::thisThread());
-} // Must not return out of a kernel thread
-
-void kthread2() {
-    printf("Thread type 2 executed\n");
-    volatile int sum = 0;
-    for (int i = 0; i < 30000000; i++) {
-        sum |= i;
-        if (i % 10000000 == 0) printf("Type 2 executed more\n");
-    }
-    // yield(&kernel::thisThread());
-    printf("Thread type 2 executed final time\n");
-    kernel::thisThread().finished = true;
-    // yield(&kernel::thisThread());
-    panic("Nothing to do for thread 2\n");
-} // Must not return out of a kernel thread
-
 int64_t counter = 0;
-constexpr int CNT = 1e8 - 4567;
+constexpr int CNT = 1e8;
 MutexLock lock;
 
 void func() {
     for (int64_t i = 0; i < CNT; i++) {
         lock.acquireLock();
-        counter ^= i;
+        counter += i;
         lock.releaseLock();
     }
     printf("Final Value: %l\n", counter);
-    kernel::thisThread().finished = true;
-    panic("Thread end");
 }
 
 extern "C" void kernel_main(void) {
@@ -171,16 +136,17 @@ extern "C" void kernel_main(void) {
     // local.push_back(kernel::Thread((uint64_t)&kthread2));
     // local.push_back(kernel::Thread((uint64_t)&kthread2));
     // local.push_back(kernel::Thread((uint64_t)&kthread2));
-    local.push_back(kernel::Thread((uint64_t)&func));
-    local.push_back(kernel::Thread((uint64_t)&func));
-    local.push_back(kernel::Thread((uint64_t)&func));
+    local.push_back(kernel::Thread(&func));
+    local.push_back(kernel::Thread(&func));
+    local.push_back(kernel::Thread(&func));
 
     // for (auto& x : local) {
     //     printf("KThread: rsp: %x, rip: %x, id: %d \n", x.rsp, x.rip, x.id);
     // }
-
-    for (int64_t i = 0; i < CNT; i++) {
-        counter ^= i;
+    for (int _ = 0; _ < 3; _++) {
+        for (int64_t i = 0; i < CNT; i++) {
+            counter += i;
+        }
     }
     printf("Final Value: %l\n", counter);
     counter = 0;

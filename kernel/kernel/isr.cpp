@@ -7,8 +7,6 @@
 
 isr_handler_t interrupt_handlers[256];
 
-static int pitCount = 0;
-
 extern "C" void isr_handler(ISRFrame * frame) {
     auto isrNum = frame->isrNumber;
     if (isrNum < 256 && interrupt_handlers[isrNum] != 0) {
@@ -30,18 +28,8 @@ extern "C" void isr_handler(ISRFrame * frame) {
 
 
     if (isrNum >= pic::PIC1Offset && isrNum < pic::PIC2End) {
-        pitCount++;
         printf("singaling EOI\n");
         pic::signalEOI(isrNum);
-        if (pitCount >= 10) pit::stop();
-    }
-
-
-    if (isrNum >= pic::PIC1Offset && isrNum < pic::PIC2End) {
-        pitCount++;
-        printf("singaling EOI\n");
-        pic::signalEOI(isrNum);
-        if (pitCount >= 10) pit::stop();
     }
 }
 

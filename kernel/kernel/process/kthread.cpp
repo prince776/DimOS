@@ -7,38 +7,32 @@
 extern Vector<kernel::Thread>* kthreadsPtr;
 extern size_t currKThreadIdx;
 
-extern "C" void scheduleKThread(kernel::ContextStack * prevContext) {
-    printf("CONTEXT SWITCHED\n");
-    auto* prevThread = prevContext->controlBlock;
-    auto& kthreads = *kthreadsPtr;
-    size_t prevIndex = kthreads.size();
-    for (size_t i = 0; i < kthreads.size(); i++) {
-        if (kthreads[i].id == prevThread->id) {
+extern "C" void scheduleKernelThread(Vector<kernel::Thread> &threads, kernel::Thread & prevThread) {
+    printf("SWITCHING CONTEXT\n");
+    size_t prevIndex = threads.size();
+    for (size_t i = 0; i < threads.size(); i++) {
+        if (threads[i].id == prevThread.id) {
             prevIndex = i;
             break;
         }
     }
-    if (!prevThread->started) {
-        prevThread->started = true;
-    }
-    bool validIdx = prevIndex < kthreads.size();
-    if (!prevThread->finished && validIdx) {
-        prevThread->copyContext(*prevContext);
-    }
+    prevThread.started = true;
+    bool validIdx = prevIndex < threads.size();
 
-    if (prevThread->finished && validIdx) { // remove the thread
-        bool swapToEnd = prevIndex != (kthreads.size() - 1);
+    if (prevThread.finished && validIdx) { // remove the thread
+        bool swapToEnd = prevIndex != (threads.size() - 1);
         if (swapToEnd) {
-            swap(kthreads[prevIndex], kthreads[kthreads.size() - 1]);
+            swap(threads[prevIndex], threads[threads.size() - 1]);
         }
-        kthreads.pop_back();
+        threads.pop_back();
         // TODO: isn't exactly round robin, but that's fine for now, since it's not premptive, ig?
     }
-    if (!kthreads.size()) {
+    if (!threads.size()) {
         panic("No kernel threads left\n");
     }
-    currKThreadIdx = (prevIndex + 1) % kthreads.size();
-    auto& nextThread = kthreads[currKThreadIdx];
+    // TODO: shared var update
+    currKThreadIdx = (prevIndex + 1) % threads.size();
+    auto& nextThread = threads[currKThreadIdx];
     // return_from_yield(&kthreads[currKThreadIdx]);
     return_from_interrupt(&nextThread);
 }
@@ -50,14 +44,8 @@ namespace kernel {
 }
 
 void premptiveScheduler(ISRFrame* isrFrame) {
-    kernel::ContextStack prevContext;
-    prevContext.controlBlock = &kernel::thisThread();
-    prevContext.genRegisters = isrFrame->genRegisters;
-    prevContext.rip = isrFrame->interruptFrame.rip;
-    prevContext.rsp = isrFrame->interruptFrame.rsp;
-    // if (kernel::thisThread().started) {
-    prevContext.rflags = isrFrame->interruptFrame.rflags;
-    // }
-    scheduleKThread(&prevContext);
+    auto& prevThread = kernel::thisThread();
+    prevThread.copyFromISRFrame(*isrFrame);
+    scheduleKernelThread(*kthreadsPtr, prevThread);
 }
 
