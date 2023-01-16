@@ -88,3 +88,30 @@ public:
         lock = 0;
     }
 };
+
+// Intentionally made using Mutex and ConditionVariable, so that if
+// there's a big in concurrency, only they need to be fixed.
+class Sempahore {
+private:
+    int32_t value;
+    MutexLock lock;
+    ConditionVariable condition;
+public:
+    Sempahore(int value)
+        : value(value) {}
+
+    void wait() {
+        lock.acquireLock();
+        while (value <= 0)
+            condition.wait(lock);
+        value--;
+        lock.releaseLock();
+    }
+
+    void post() {
+        lock.acquireLock();
+        value++;
+        condition.notifyOne();
+        lock.releaseLock();
+    }
+};
