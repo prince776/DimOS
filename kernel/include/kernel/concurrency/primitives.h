@@ -17,7 +17,7 @@ public:
         // reason: this thread was unparked, but then before it could be scheduled a new thread was spawned
         // which acquired this mutex
         while (true) {
-            while (__sync_bool_compare_and_swap(&lock, 0, 1) == 0)
+            while (__sync_val_compare_and_swap(&lock, 0, 1) == 1)
                 continue;
             if (!flag) {
                 flag = 1;
@@ -33,12 +33,54 @@ public:
         }
     }
     void releaseLock() {
-        while (__sync_bool_compare_and_swap(&lock, 0, 1) == 0)
+        while (__sync_val_compare_and_swap(&lock, 0, 1) == 1)
             continue;
         if (!queue.size()) {
             flag = 0;
         }
         else {
+            auto next = queue.back();
+            queue.pop_back();
+            kernel::unpark(kernel::getThread(next));
+        }
+        lock = 0;
+    }
+};
+
+
+class ConditionVariable {
+private:
+    int64_t lock = 0;
+    Vector<uint64_t> queue; // a vector named queue that will be used as stack
+public:
+    ConditionVariable() = default;
+
+    // PreCondition: This mutex lock must be held
+    void wait(MutexLock& mutex) {
+        while (__sync_val_compare_and_swap(&lock, 0, 1) == 1)
+            continue;
+        mutex.releaseLock(); // can be before acquiring lock
+        queue.push_back(kernel::thisThread().id);
+        kernel::setpark();
+        lock = 0;
+        kernel::park();
+    }
+
+    void notifyOne() {
+        while (__sync_val_compare_and_swap(&lock, 0, 1) == 1)
+            continue;
+        if (queue.size()) {
+            auto next = queue.back();
+            queue.pop_back();
+            kernel::unpark(kernel::getThread(next));
+        }
+        lock = 0;
+    }
+
+    void notifyAll() {
+        while (__sync_val_compare_and_swap(&lock, 0, 1) == 1)
+            continue;
+        while (queue.size()) {
             auto next = queue.back();
             queue.pop_back();
             kernel::unpark(kernel::getThread(next));

@@ -66,13 +66,19 @@ Vector<kernel::Thread> kthreads;
 size_t currKThreadIdx = 0;
 
 int64_t counter = 0;
-constexpr int CNT = 1e8;
+constexpr int CNT = 8;
 MutexLock lock;
+ConditionVariable condn;
 
 void func() {
     for (int64_t i = 0; i < CNT; i++) {
+        if (i % 5 == 0) condn.notifyOne();
         lock.acquireLock();
+        if (i % 5 == 0) {
+            condn.wait(lock);
+        }
         counter += i;
+        printf("In thread %d, adding %d\n", kernel::thisThread().id, i);
         lock.releaseLock();
     }
     printf("Final Value: %l\n", counter);
