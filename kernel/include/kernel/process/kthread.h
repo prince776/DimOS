@@ -4,6 +4,20 @@
 #include <kernel/cpp/unique-ptr.hpp>
 #include <kernel/cpp/vector.hpp>
 #include <kernel/isr.h>
+#include <kernel/isr.h>
+
+enum class TaskState {
+    NOT_STARTED = 0,
+    RUNNING = 1,
+    SLEEPING = 2,
+    BLOCKED = 4,
+    COMPLETED = 8,
+    DO_NOT_DISTURB = 16,
+};
+
+inline bool isRunnableState(TaskState state) {
+    return state == TaskState::NOT_STARTED || state == TaskState::RUNNING;
+}
 
 namespace kernel {
     void threadRunWrapper();
@@ -29,10 +43,10 @@ namespace kernel {
     public:
         ExecContext execContext;
 
-        bool started = false;
         uint64_t id = 0;
         UniquePtr<StackSpace> stackMem;
-        bool finished = false;
+
+        TaskState state = TaskState::NOT_STARTED;
         void(*runFunc)(void);
 
         Thread() = default;
@@ -64,17 +78,29 @@ namespace kernel {
     }
 
     Thread& thisThread();
+    Thread& getThread(size_t idx);
 
     inline void threadRunWrapper() {
         thisThread().runFunc();
-        thisThread().finished = true;
+        thisThread().state = TaskState::COMPLETED;
         yield();
     }
 
+    inline void setpark() {
+        thisThread().state = TaskState::DO_NOT_DISTURB;
+    }
+
+    inline void park() {
+        thisThread().state = TaskState::SLEEPING;
+        yield();
+    }
+
+    inline void unpark(kernel::Thread& thread) {
+        thread.state = TaskState::RUNNING;
+    }
 }
 
 extern "C" void scheduleKernelThread(Vector<kernel::Thread> &threads, kernel::Thread & prevThread);
 extern "C" void return_from_interrupt(kernel::Thread * thread);
 
 void premptiveScheduler(ISRFrame* isrFrame);
-

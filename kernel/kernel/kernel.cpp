@@ -62,7 +62,7 @@ extern "C" void kernel_early() {
     }
 }
 
-Vector<kernel::Thread>* kthreadsPtr = nullptr;
+Vector<kernel::Thread> kthreads;
 size_t currKThreadIdx = 0;
 
 int64_t counter = 0;
@@ -124,21 +124,18 @@ extern "C" void kernel_main(void) {
     MallocHeap::init();
     printf("Memory Management System Activated!\n");
 
-    Vector<kernel::Thread> local;
-    kthreadsPtr = &local;
-
     // Insert a finished thread that represents curr thread.
-    local.push_back(kernel::Thread(0));
-    local[0].finished = true;
+    kthreads.push_back(kernel::Thread(0));
+    kthreads[0].state = TaskState::COMPLETED;
 
-    // local.push_back(kernel::Thread((uint64_t)&kthread1));
-    // local.push_back(kernel::Thread((uint64_t)&kthread2));
-    // local.push_back(kernel::Thread((uint64_t)&kthread2));
-    // local.push_back(kernel::Thread((uint64_t)&kthread2));
-    // local.push_back(kernel::Thread((uint64_t)&kthread2));
-    local.push_back(kernel::Thread(&func));
-    local.push_back(kernel::Thread(&func));
-    local.push_back(kernel::Thread(&func));
+    // kthreads.push_back(kernel::Thread((uint64_t)&kthread1));
+    // kthreads.push_back(kernel::Thread((uint64_t)&kthread2));
+    // kthreads.push_back(kernel::Thread((uint64_t)&kthread2));
+    // kthreads.push_back(kernel::Thread((uint64_t)&kthread2));
+    // kthreads.push_back(kernel::Thread((uint64_t)&kthread2));
+    kthreads.push_back(kernel::Thread(&func));
+    kthreads.push_back(kernel::Thread(&func));
+    kthreads.push_back(kernel::Thread(&func));
 
     // for (auto& x : local) {
     //     printf("KThread: rsp: %x, rip: %x, id: %d \n", x.rsp, x.rip, x.id);

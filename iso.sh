@@ -16,6 +16,7 @@ set -e
 # grub-mkrescue -o dimos.iso isodir
 
 # Download the latest Limine binary release.
+# git clone https://github.com/limine-bootloader/limine.git --branch=v4.x-branch-binary --depth=1
 make -C limine
 mkdir -p isodir
 

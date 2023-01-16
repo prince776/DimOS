@@ -9,6 +9,15 @@ public:
         static RRScheduler<T> scheduler;
         return scheduler;
     }
+    /**
+     * @brief Get the Next task index to schedule
+     * if returned value == tasks.size(), then no
+     * task was scheduled/
+     *
+     * @param tasks
+     * @param prevTask
+     * @return size_t
+     */
     size_t getNext(Vector<T>& tasks, T& prevTask);
 private:
     RRScheduler() = default;
@@ -25,10 +34,15 @@ size_t RRScheduler<T>::getNext(Vector<T>& tasks, T& prevTask) {
             break;
         }
     }
-    prevTask.started = true;
-    bool validIdx = prevIndex < tasks.size();
+    bool isIdxValid = prevIndex < tasks.size();
+    if (isIdxValid && prevTask.state == TaskState::DO_NOT_DISTURB) {
+        return prevIndex;
+    }
+    if (prevTask.state != TaskState::COMPLETED) {
+        prevTask.state = TaskState::RUNNING;
+    }
 
-    if (prevTask.finished && validIdx) { // remove the task
+    if (prevTask.state == TaskState::COMPLETED && isIdxValid) { // remove the task
         bool swapToEnd = prevIndex != (tasks.size() - 1);
         if (swapToEnd) {
             swap(tasks[prevIndex], tasks[tasks.size() - 1]);
@@ -39,6 +53,13 @@ size_t RRScheduler<T>::getNext(Vector<T>& tasks, T& prevTask) {
     if (!tasks.size()) {
         return 0;
     }
-    size_t nextIdx = (prevIndex + 1) % tasks.size();
+    size_t nextIdx = (prevIndex + 1) % tasks.size(), tried = 0;
+    while (!isRunnableState(tasks[nextIdx].state) && tried < tasks.size()) {
+        nextIdx = (nextIdx + 1) % tasks.size();
+        tried++;
+    }
+    if (tried == tasks.size()) {
+        return tasks.size();
+    }
     return nextIdx;
 }

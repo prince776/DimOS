@@ -58,6 +58,7 @@ kernel/memory/vmm.o \
 kernel/memory/heap.o \
 kernel/memory/kheap.o \
 kernel/cpp/memory.o \
+kernel/cpp/common.o \
 kernel/process/kthread.o \
 kernel/devices/pic.o \
 kernel/devices/pit.o \
