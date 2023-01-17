@@ -2,3 +2,4 @@
 isodir
 sysroot
 *.log
+.DS_Store
