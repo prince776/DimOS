@@ -26,7 +26,7 @@ A x86_64 Operating System. An OS with a future that's not quite bright.
 
 Here's the kernel doing multithreaded addition on a shared variable with Mutex and Condition variables:
 
-![Image](/docs/demo.png "Demo Image")
+![Image](docs/demo.png "Demo Image")
 
 ## Build Instructions
 
