@@ -26,7 +26,7 @@ A x86_64 Operating System. An OS with a future that's not quite bright.
 
 Here's the kernel doing multithreaded addition on a shared variable with Mutex and Condition variables:
 
-![Image](docs/demo.png "Demo Image")
+![Image](https://media.discordapp.net/attachments/912603519054401539/1064951522078773348/demo.png?width=1558&height=1004)
 
 ## Build Instructions
 
