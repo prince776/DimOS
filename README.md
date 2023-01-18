@@ -8,7 +8,7 @@ A x86_64 Operating System. An OS with a future that's not quite bright.
 - [x] Long Mode (64 bit), Higher Half Kernel
 - [x] Software and Hardware Interrupts (IDT and PIT)
 - [x] Physical Memory Manager (Bitmap based)
-- [x] Virtual Memory Manager
+- [x] Virtual Memory Manager (4 Level Paging support)
 - [x] Kernel Heap (FreeList)
 - [x] malloc/free and new/delete support
 - [x] ~~Minimal libc~~ printf
@@ -41,7 +41,5 @@ Here's the kernel doing multithreaded addition on a shared variable with Mutex a
 - Clone the repo
 - Run `git submodule update --init` (or clone recursively in first step itself)
 - Run `make -C limine`
-- Install `xorriso` (ex: `brew install xorriso`)
-- Install `qemu` (ex: `brew install qemu`)
 - Run `./all.sh` to clean + build + run.
 - Use `./build.sh` for just building, `./qemu.sh` for just running
