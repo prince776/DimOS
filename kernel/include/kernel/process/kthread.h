@@ -39,9 +39,18 @@ namespace kernel {
         char buffer[stackSize];
     };
 
+    struct ContextSwitchInfo {
+        enum class Method {
+            NORMALLY_INTERRUPTED = 0,
+            YIELDED = 1,
+        };
+        Method method = Method::NORMALLY_INTERRUPTED;
+    };
+
     class Thread {
     public:
         ExecContext execContext;
+        ContextSwitchInfo contextSwitchInfo;
 
         uint64_t id = 0;
         UniquePtr<StackSpace> stackMem;
@@ -59,6 +68,8 @@ namespace kernel {
             stackMem = makeUnique<StackSpace>();
             execContext.rip = (uint64_t)&threadRunWrapper;
             execContext.rsp = (uint64_t)stackMem.get() + stackSize - 4096;
+
+            resetContextSwitchInfo();
         }
 
         void copyFromISRFrame(const ISRFrame& context) {
@@ -68,17 +79,18 @@ namespace kernel {
             execContext.rip = context.interruptFrame.rip;
         }
 
+        void resetContextSwitchInfo() {
+            contextSwitchInfo.method = ContextSwitchInfo::Method::NORMALLY_INTERRUPTED;
+        }
     };
-
-
-    // TODO: This results in calling signalEOI even though PIT didn't do the interrupt
-    // Can result in signalling EOI improperly.
-    inline void yield() {
-        __asm__ volatile ("int $0x20");
-    }
 
     Thread& thisThread();
     Thread& getThread(size_t idx);
+
+    inline void yield() {
+        thisThread().contextSwitchInfo.method = kernel::ContextSwitchInfo::Method::YIELDED;
+        __asm__ volatile ("int $0x20");
+    }
 
     inline void threadRunWrapper() {
         thisThread().runFunc();
@@ -101,6 +113,6 @@ namespace kernel {
 }
 
 extern "C" void scheduleKernelThread(Vector<kernel::Thread> &threads, kernel::Thread & prevThread);
-extern "C" void return_from_interrupt(kernel::Thread * thread);
+extern "C" void return_from_interrupt(kernel::Thread * thread, kernel::ContextSwitchInfo*);
 
 void premptiveScheduler(ISRFrame* isrFrame);

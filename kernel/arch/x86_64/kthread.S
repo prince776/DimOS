@@ -5,7 +5,10 @@
 .globl return_from_interrupt
 .extern interrupt_return_position
 .extern signalEOI
-return_from_interrupt: // takes a pointer to control block of kthread that called yield
+// params:
+// rdi: ptr to Thread Control Block
+// rsi: ptr to Context Switch Info
+return_from_interrupt:
     movq (%rdi), %rsp // Change to next kthread's stack
     
     // push a saved (or dummy if first time) ISR frame, then we can pop them and iretq
@@ -46,7 +49,12 @@ return_from_interrupt: // takes a pointer to control block of kthread that calle
     pushq 24(%rdi)
     pushq 16(%rdi)
 
+    movq $0, %rax
+    cmp %rsi, %rax // 0 means interrupted via PIT
+    jne end_return_from_interrupt
+
     movq $32, %rdi // set param for signalEOI
     call signalEOI // IMP: Must do, as we are not unwinding stack from ISR handlers, we are skipping that
 
+end_return_from_interrupt:
     jmp interrupt_return_position

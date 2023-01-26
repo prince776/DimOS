@@ -10,6 +10,8 @@ extern size_t currKThreadIdx;
 
 extern "C" void scheduleKernelThread(Vector<kernel::Thread> &threads, kernel::Thread & prevThread) {
     printf("SWITCHING CONTEXT\n");
+    auto contextSwitchInfo = prevThread.contextSwitchInfo;
+    prevThread.resetContextSwitchInfo();
     auto nextIdx = RRScheduler<kernel::Thread>::get().getNext(threads, prevThread);
     if (nextIdx == threads.size()) {
         panic("No kernel threads left");
@@ -17,7 +19,7 @@ extern "C" void scheduleKernelThread(Vector<kernel::Thread> &threads, kernel::Th
     // TODO: shared var update
     currKThreadIdx = nextIdx;
     auto& nextThread = threads[currKThreadIdx];
-    return_from_interrupt(&nextThread);
+    return_from_interrupt(&nextThread, &contextSwitchInfo);
 }
 
 namespace kernel {
