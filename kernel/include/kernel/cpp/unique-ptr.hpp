@@ -37,8 +37,14 @@ public:
 
     // Operator overloads
     explicit operator bool() const noexcept { return ptr != nullptr; }
-    T* operator->() const noexcept { return get(); }
-    T& operator*() const noexcept {
+    const T* operator->() const noexcept { return get(); }
+    const T& operator*() const noexcept {
+        assert(ptr != nullptr);
+        return *get();
+    }
+
+    T* operator->()  noexcept { return get(); }
+    T& operator*()  noexcept {
         assert(ptr != nullptr);
         return *get();
     }
