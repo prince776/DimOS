@@ -3,30 +3,44 @@
 #include <kernel/cpp/iterator.hpp>
 #include <kernel/cpp/unique-ptr.hpp>
 
-template <typename T>
+template <typename T, Allocator Alloc = Mallocator>
 class Vector {
 public:
     // Constructors
-    Vector() = default;
-    Vector(size_t size): m_size(size), capacity(size) {
-        data = makeUnique<T[]>(capacity);
+    Vector(Alloc allocator = {}): allocator(allocator) {}
+    Vector(size_t size, Alloc allocator = {})
+        : m_size(size), capacity(size), allocator(allocator) {
+        data = makeUnique<T[]>(allocator, capacity);
         fill(T{});
     }
-    Vector(size_t size, const T& val): m_size(size), capacity(size) {
-        data = makeUnique<T[]>(capacity);
+    Vector(size_t size, const T& val, Alloc allocator = {})
+        : m_size(size), capacity(size), allocator(allocator) {
+        data = makeUnique<T[]>(allocator, capacity);
         fill(val);
     }
-
-    Vector(const Vector<T>& v) {
+    Vector(const Vector<T, Alloc>& v) {
+        allocator = v.allocator;
         m_size = v.size();
         capacity = v.capacity;
-        data = makeUnique<T[]>(capacity);
+        data.~UniquePtr();
+        data = makeUnique<T[], Alloc>(allocator, capacity);
         for (int i = 0; i < v.size(); i++) {
             data[i] = v[i];
         }
     }
-    // Vector(std::initializer_list<T> ini)
-    //     : size(ini.size()), capacity(ini.size()) {
+    Vector& operator=(const Vector<T, Alloc>& v) {
+        allocator = v.allocator;
+        m_size = v.size();
+        capacity = v.capacity;
+        data.~UniquePtr();
+        data = makeUnique<T[], Alloc>(allocator, capacity);
+        for (int i = 0; i < v.size(); i++) {
+            data[i] = v[i];
+        }
+        return *this;
+    }
+    // Vector(std::initializer_list<T> ini, Alloc allocator = {})
+    //     : m_size(ini.size()), capacity(ini.size()), allocator(allocator) {
     //     data = makeUnique<T[]>(capacity);
     //     auto it = begin();
     //     for (const auto& val : ini) {
@@ -85,6 +99,21 @@ public:
         return (*this)[idx];
     }
 
+    bool operator==(const Vector& other) const noexcept {
+        if (size() != other.size()) {
+            return false;
+        }
+        for (int i = 0; i < size(); i++) {
+            if ((*this)[i] != other[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    bool operator!=(const Vector& other) const noexcept {
+        return !(*this == other);
+    }
+
 protected:
     void fill(const T& val) {
         for (size_t i = 0; i < m_size; i++) {
@@ -111,5 +140,6 @@ protected:
 
 protected:
     UniquePtr<T[]> data;
+    Alloc allocator;
     size_t m_size = 0, capacity = 0;
 };
