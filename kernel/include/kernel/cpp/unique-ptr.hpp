@@ -120,14 +120,14 @@ template <typename T, typename... Args, Allocator Alloc = Mallocator>
 UniquePtr<T> makeUnique(Args&&... args) {
     Alloc allocator{};
     auto blk = allocator.allocate(sizeof(T));
-    return UniquePtr<T>(new T(forward<Args>(args)...), allocator);
+    return UniquePtr<T>(new (blk.ptr) T(forward<Args>(args)...), allocator);
 }
 
 template <typename T, typename... Args, Allocator Alloc>
     requires(!is_array_v<T>)
 UniquePtr<T> makeUnique(Alloc allocator, Args&&... args) {
     auto blk = allocator.allocate(sizeof(T));
-    return UniquePtr<T>(new T(forward<Args>(args)...), allocator);
+    return UniquePtr<T>(new (blk.ptr) T(forward<Args>(args)...), allocator);
 }
 
 template <typename T, Allocator Alloc = Mallocator>
