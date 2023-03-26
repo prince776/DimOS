@@ -136,7 +136,7 @@ UniquePtr<T> makeUnique(size_t num) {
     Alloc allocator{};
     using baseT = remove_extent_t<T>;
     Blk blk = allocator.allocate(sizeof(baseT) * num);
-    for (int i = 0; i < num; i++) {
+    for (size_t i = 0; i < num; i++) {
         baseT* ptr = ((baseT*)blk.ptr) + i;
         new (ptr) baseT();
     }
@@ -148,7 +148,7 @@ template <typename T, Allocator Alloc = Mallocator>
 UniquePtr<T> makeUnique(Alloc allocator, size_t num) {
     using baseT = remove_extent_t<T>;
     Blk blk = allocator.allocate(sizeof(baseT) * num);
-    for (int i = 0; i < num; i++) {
+    for (size_t i = 0; i < num; i++) {
         baseT* ptr = ((baseT*)blk.ptr) + i;
         new (ptr) baseT();
     }

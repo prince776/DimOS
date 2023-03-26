@@ -15,7 +15,6 @@ INCLUDEDIR?=$(PREFIX)/include
 
 CFLAGS:=$(CFLAGS) -Wall  \
 	-Wextra 			 \
-    -std=c11             \
     -ffreestanding       \
     -fstack-protector-strong \
     -fno-lto             \
@@ -82,7 +81,7 @@ dimos.kernel: $(OBJS) $(ARCHDIR)/linker.ld
 	$(CC) -T $(ARCHDIR)/linker.ld -o $@ $(CFLAGS) $(CPPFLAGS) $(LINK_LIST)
 
 .c.o:
-	$(CC) -MD -c $< -o $@ -std=gnu11 $(CFLAGS) $(CPPFLAGS)
+	$(CC) -MD -c $< -o $@ -std=c11 $(CFLAGS) $(CPPFLAGS)
 
 .cpp.o:
 	$(CXX) -MD -c $< -o $@ -std=c++20 $(CFLAGS) $(CPPFLAGS)

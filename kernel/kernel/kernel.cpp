@@ -16,6 +16,7 @@
 #include <kernel/devices/pit.h>
 #include <kernel/isr.h>
 #include <kernel/concurrency/primitives.h>
+#include <kernel/filesystem/vfs.h>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -154,9 +155,11 @@ extern "C" void kernel_main(void) {
     printf("Final Value: %l\n", counter);
     counter = 0;
     {
-        registerInterruptHandler(pic::PIC1Offset, premptiveScheduler);
-        pit::init(1);
+        // registerInterruptHandler(pic::PIC1Offset, premptiveScheduler);
+        // pit::init(1);
     }
+
+    vfs::Node node;
 
     panic("Nothing to do\n");
 }

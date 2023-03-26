@@ -1,9 +1,10 @@
 #pragma once
+#include <string.h>
 
 #include <kernel/cpp/iterator.hpp>
 #include <kernel/cpp/unique-ptr.hpp>
 #include <kernel/cpp/vector.hpp>
-#include <string.h>
+#include <kernel/cpp/allocator.hpp>
 
 template <Allocator Alloc = Mallocator>
 class String: public Vector<char, Alloc> {
@@ -25,8 +26,19 @@ public:
         this->fill(val);
         this->data[this->m_size - 1] = 0;
     }
-    String(const char* str, Alloc allocator = {}) {
+    String(const char* str, Alloc allocator) {
         this->allocator = allocator;
+        size_t len = strlen(str);
+        this->capacity = len + 1;
+        this->m_size = len + 1;
+        this->data = makeUnique<char[]>(this->allocator, this->capacity);
+        for (int i = 0; i < len; i++) {
+            this->data[i] = str[i];
+        }
+        this->data[len] = 0;
+    }
+    String(const char* str) {
+        this->allocator = Alloc{};
         size_t len = strlen(str);
         this->capacity = len + 1;
         this->m_size = len + 1;
@@ -109,3 +121,6 @@ public:
 
     const char* c_str() const { return this->data.get(); }
 };
+
+// No idea why I need to specify angular brackets here.
+using StringTest = String<>;
