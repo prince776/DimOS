@@ -59,6 +59,7 @@ kernel/memory/kheap.o \
 kernel/cpp/memory.o \
 kernel/cpp/common.o \
 kernel/process/kthread.o \
+kernel/filesystem/ramdisk.o \
 kernel/concurrency/primitives.o \
 kernel/devices/pic.o \
 kernel/devices/pit.o \

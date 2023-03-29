@@ -3,7 +3,6 @@
 #include <kernel/cpp/unique-ptr.hpp>
 #include <kernel/cpp/string.hpp>
 #include <kernel/filesystem/resource.h>
-#include <kernel/filesystem/fs.h>
 
 namespace vfs {
     struct Node;
@@ -16,9 +15,9 @@ public:
     virtual int read(Resource* resource, uint32_t offset, uint32_t size, uint8_t* buffer) const = 0;
     virtual int write(Resource* resource, uint32_t offset, uint32_t size, uint8_t* buffer) = 0;
     virtual Vector<vfs::DirEntry> readDir(const vfs::Node& node) const = 0;
+    virtual void makeDir(vfs::Node& node) = 0;
     virtual void populateVFSNode(vfs::Node& node, int inode) = 0;
 };
-
 
 namespace vfs {
     enum class NodeType {
@@ -27,7 +26,8 @@ namespace vfs {
         DIRECTORY,
     };
 
-    struct Node {
+    class Node {
+    public:
         String<> name;
         NodeType type = NodeType::INVALID;
         FileSystem* fileSystem;
@@ -35,9 +35,14 @@ namespace vfs {
         Vector<Node*> children;
         Node* parent;
 
-        void populate(FileSystem* fs, int inode) {
+        void populate(FileSystem* fs, const String<>& name, int inode) {
+            this->name = name;
             fs->populateVFSNode(*this, inode);
         }
+        Vector<vfs::DirEntry> readDir() { return fileSystem->readDir(*this); }
+        void mkdir() { return fileSystem->makeDir(*this); }
+        int read(Resource* resource, uint32_t offset, uint32_t size, uint8_t* buffer) const { return fileSystem->read(resource, offset, size, buffer); }
+        int write(Resource* resource, uint32_t offset, uint32_t size, uint8_t* buffer) { return fileSystem->write(resource, offset, size, buffer); }
     };
 
     struct DirEntry {
@@ -49,12 +54,19 @@ namespace vfs {
     private:
         Node* root;
     public:
-        VFS(FileSystem* fs, int inode = 0, const String<>& name = "") {
-            root = new Node();
-            root->name = name;
-            root->populate(fs, inode);
-        }
+        VFS(FileSystem* fs, int inode = 0, const String<>& name = "");
 
+        // Read contents of a dir.
+        Vector<Node*> readDir(const String<>& path);
+        // Create a new dir. All parent directories should exist.
+        Node* mkdir(const String<>& path);
+        // Open a file. For now just returns vfs node to it.
+        Node* openNode(const String<>& path);
+
+    private:
+        Node* resolvePath(const String<>& path);
+        Node* resolvePathUtil(Node* curr, const Vector<String<>>& pathEntries, int idx);
+        void addChildren(Node* node);
     };
 
 }

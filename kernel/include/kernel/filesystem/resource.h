@@ -3,14 +3,10 @@
 
 struct Resource;
 
-struct Stat {
+struct Resource {
     int32_t inode{};
     int32_t size{};
     int32_t deviceID{};
-};
-
-struct Resource {
-    Stat stat{};
 };
 
 
