@@ -16,7 +16,7 @@ A x86_64 Operating System. An OS with a future that's not quite bright.
 - [x] Preemptive Multitasking using timer interupts (PIT)
 - [x] Round Robin Scheduler
 - [x] Concurrency primitives (Mutex, Condition Variable, and Semaphore)
-- [ ] File system
+- [x] File system
 - [ ] Userland process and threads
 - [ ] System Calls
 - [ ] Shell
