@@ -54,6 +54,7 @@ namespace fs {
 
         Vector<vfs::DirEntry> readDir(const vfs::Node& vfsNode) const override;
         void writeDir(vfs::Node& node, const Vector<vfs::DirEntry>& entries) override;
+        void removeDirEntry(vfs::Node& node, const vfs::DirEntry& entry) override;
 
         void populateVFSNode(vfs::Node& vfsNode, int inode)  override;
     private:

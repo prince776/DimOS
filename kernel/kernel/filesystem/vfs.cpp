@@ -24,17 +24,37 @@ namespace vfs {
         }
         dirName.reverse();
         Node* parentNode = resolvePath(parentPath);
-        // printf("finding parent node for path: '%s', with parentPath: '%s'\n", path.c_str(), parentPath.c_str());
         if (!parentNode) {
-            // printf("parent node not found for path: '%s', with parentPath: '%s'\n", path.c_str(), parentPath.c_str());
             return nullptr;
         }
-        // printf("Dir name here is: %s\n", dirName.c_str());
         Node* dirNode = new Node(parentNode->fileSystem);
         dirNode->mkdir();
         dirNode->name = dirName;
         dirNode->parent = parentNode;
         parentNode->children.push_back(dirNode);
+
+        parentNode->writeDir(Vector<DirEntry>(1, DirEntry::fromStringName(dirName, dirNode->resource.inode)));
+    }
+
+    Node* VFS::mkfile(const String<>& path) {
+        auto parentPath = path;
+        String fileName = "";
+        while (parentPath.back() != '/') {
+            fileName.push_back(parentPath.back());
+            parentPath.pop_back();
+        }
+        fileName.reverse();
+        Node* parentNode = resolvePath(parentPath);
+        if (!parentNode) {
+            return nullptr;
+        }
+        Node* dirNode = new Node(parentNode->fileSystem);
+        dirNode->mkFile();
+        dirNode->name = fileName;
+        dirNode->parent = parentNode;
+        parentNode->children.push_back(dirNode);
+
+        parentNode->writeDir(Vector<DirEntry>(1, DirEntry::fromStringName(fileName, dirNode->resource.inode)));
     }
 
     void VFS::rmdir(const String<>& path) {
@@ -43,9 +63,63 @@ namespace vfs {
             printf("Can't remove non empty directory: %s", path.c_str());
             return;
         }
+        if (node->type != NodeType::DIRECTORY) {
+            printf("Can't rmdir a non directory: %s", path.c_str());
+            return;
+        }
+        auto removedInode = node->resource.inode;
         node->remove();
+
         auto parent = node->parent;
         parent->children.fastErase(parent->children.find(node));
+
+        parent->removeDirEntry(DirEntry{ .inode = removedInode });
+
+        delete node;
+    }
+
+    void VFS::rmfile(const String<>& path) {
+        auto node = resolvePath(path);
+        if (node->type != NodeType::FILE) {
+            printf("Can't rmfile a non file: %s", path.c_str());
+            return;
+        }
+        auto removedInode = node->resource.inode;
+        node->remove();
+
+        auto parent = node->parent;
+        parent->children.fastErase(parent->children.find(node));
+
+        parent->removeDirEntry(DirEntry{ .inode = removedInode });
+
+        delete node;
+    }
+
+    void VFS::read(const String<>& path, uint32_t offset, uint32_t size, uint8_t* buffer) {
+        auto node = resolvePath(path);
+        if (!node || node->type == NodeType::INVALID) {
+            printf("Can't read invalid node: %s\n", path.c_str());
+            return;
+        }
+        node->read(offset, size, buffer);
+    }
+
+    void VFS::write(const String<>& path, uint32_t offset, uint32_t size, uint8_t* buffer) {
+        auto node = resolvePath(path);
+        if (!node || node->type == NodeType::INVALID) {
+            printf("Can't write invalid node: %s\n", path.c_str());
+            return;
+        }
+        node->write(offset, size, buffer);
+    }
+
+    Node* VFS::openNode(const String<>& path) {
+        auto node = resolvePath(path);
+        if (!node) {
+            printf("Directory/file doesn't exist: %s\n", path.c_str());
+            return nullptr;
+        }
+        return node;
     }
 
     void VFS::addChildren(Node* parent) {
@@ -61,14 +135,7 @@ namespace vfs {
 
     Node* VFS::resolvePath(const String<>& path) {
         auto pathEntries = path.split('/');
-        // printf("Resolving path: %s ->", path.c_str());
-        // for (auto x : pathEntries) {
-        //     printf("'%s', ", x.c_str());
-        // }
-        // printf("end\n");
-        // printf("Comparing '%s' of sz: '%d', with '%s of sz: '%d''\n", pathEntries[0].c_str(), pathEntries[0].size(), root->name.c_str(), root->name.size());
         if (pathEntries[0] != root->name) {
-            // printf("Didn't get here");
             return nullptr;
         }
         return resolvePathUtil(root, pathEntries, 1);

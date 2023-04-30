@@ -7,7 +7,8 @@
 namespace vfs {
     struct Node;
     struct DirEntry;
-    using FileNameStr = char[16];
+    constexpr int FileNameStrLen = 16;
+    using FileNameStr = char[FileNameStrLen];
 
     enum class NodeType {
         INVALID,
@@ -26,6 +27,7 @@ public:
 
     virtual Vector<vfs::DirEntry> readDir(const vfs::Node& node) const = 0;
     virtual void writeDir(vfs::Node& node, const Vector<vfs::DirEntry>& entries) = 0;
+    virtual void removeDirEntry(vfs::Node& node, const vfs::DirEntry& entry) = 0;
 
     virtual void populateVFSNode(vfs::Node& node, int inode) = 0;
 };
@@ -59,12 +61,27 @@ namespace vfs {
 
         Vector<vfs::DirEntry> readDir() { return fileSystem->readDir(*this); }
         void writeDir(const Vector<DirEntry>& entries) { return fileSystem->writeDir(*this, entries); }
+        void removeDirEntry(const DirEntry& entry) { return fileSystem->removeDirEntry(*this, entry); }
+
     };
 
     struct DirEntry {
         FileNameStr fileName;
         int inode;
-    };
+
+        static DirEntry fromStringName(const String<>& name, int inode) {
+            if (name.size() > FileNameStrLen) {
+                printf("'%s':Name will be truncated when being saved to Filesystem", name.c_str());
+            }
+            DirEntry result;
+            result.inode = inode;
+            int len = min((int)name.size(), FileNameStrLen);
+            for (int i = 0; i < len; i++) {
+                result.fileName[i] = name[i];
+            }
+            return result;
+        }
+    } __attribute__((packed));
 
     class VFS {
     private:
@@ -79,10 +96,22 @@ namespace vfs {
         // Create a new dir. All parent directories should exist.
         Node* mkdir(const String<>& path);
 
+        // Create a new file.
+        Node* mkfile(const String<>& path);
+
         // Remove dirctory.
         void rmdir(const String<>& path);
 
-        // Open a file. For now just returns vfs node to it.
+        // Remove file.
+        void rmfile(const String<>& path);
+
+        // Read a node data.
+        void read(const String<>& path, uint32_t offset, uint32_t size, uint8_t* buffer);
+
+        // Write to node.
+        void write(const String<>& path, uint32_t offset, uint32_t size, uint8_t* buffer);
+
+        // Open a node. For now just returns vfs node to it.
         Node* openNode(const String<>& path);
 
     private:

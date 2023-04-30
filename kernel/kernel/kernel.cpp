@@ -128,6 +128,27 @@ extern "C" void kernel_main(void) {
     terminal.mkdir("dir2");
     terminal.ls();
 
+    terminal.rmdir("dir1");
+    terminal.mkdir("newDir");
+    terminal.ls();
+
+    terminal.cd("newDir");
+    terminal.pwd();
+    terminal.ls();
+
+    terminal.touch("file1");
+    terminal.touch("file2");
+    terminal.touch("file3");
+    terminal.touch("file4");
+    terminal.rm("file2");
+    terminal.touch("file5");
+    terminal.ls();
+
+    char buffer[] = "This is some data.";
+    char readBuffer[1024];
+
+    terminal.writeFile("file1", (uint8_t*)buffer, sizeof(buffer));
+    terminal.readFile("file1", (uint8_t*)readBuffer, sizeof(buffer));
 
     panic("Nothing to do\n");
 }
