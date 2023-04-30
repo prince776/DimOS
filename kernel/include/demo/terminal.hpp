@@ -103,8 +103,9 @@ namespace demo {
             ((fs::RamDisk::Super*)ptr)->iNodeCnt = nodeCount;
             ((fs::RamDisk::Super*)ptr)->dataBitsetSize = dataBitsetSize;
 
-            auto node = (fs::RamDisk::Node*)(ptr + sizeof(fs::RamDisk::Super));
-            node->type = vfs::NodeType::DIRECTORY;
+            auto rdfs = fs::RamDisk(ptr, 1);
+            auto tempNode = vfs::Node(nullptr);
+            rdfs.create(tempNode, vfs::NodeType::DIRECTORY);
             return fs::RamDisk(ptr, 1);
         }
 
