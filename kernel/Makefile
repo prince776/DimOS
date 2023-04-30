@@ -2,7 +2,7 @@ DEFAULT_HOST=$(shell ../default-host.sh)
 HOST=$(DEFAULT_HOST)
 HOSTARCH=$(shell ../target-triplet-to-arch.sh $(HOST))
 
-CFLAGS?=-O2 -g
+CFLAGS?=-g
 CPPFLAGS?=
 LDFLAGS?=
 LIBS?=
@@ -60,6 +60,7 @@ kernel/cpp/memory.o \
 kernel/cpp/common.o \
 kernel/process/kthread.o \
 kernel/filesystem/ramdisk.o \
+kernel/filesystem/vfs.o \
 kernel/concurrency/primitives.o \
 kernel/devices/pic.o \
 kernel/devices/pit.o \

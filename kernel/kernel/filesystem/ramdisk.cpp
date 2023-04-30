@@ -1,6 +1,7 @@
 #include <kernel/filesystem/ramdisk.h>
 
 namespace fs {
+
     RamDisk::RamDisk(void* base, int deviceID): deviceID(deviceID) {
         super = (Super*)base;
         nodes = (Node*)(base + sizeof(Super));
@@ -14,25 +15,28 @@ namespace fs {
         dataBlocks = (DataBlock*)(dataBitsetMemBlk.ptr + dataBitsetMemBlk.size);
     }
 
-    Vector<vfs::DirEntry> RamDisk::readDir(const vfs::Node& vfsNode) const {
-        auto inode = vfsNode.resource->inode;
-        auto* node = getNode(inode);
-
-        assert(node->blocksInUse > 0, "Invalid dir inode");
-        assert(node->type == vfs::NodeType::DIRECTORY, "Can't readDir on non dir type inode");
-
-        Vector<vfs::DirEntry> res;
-        for (int block = 0; block < node->blocksInUse; block++) {
-            Dir* dirData = (Dir*)node->dataBlocks[block];
-            for (int i = 0; i < dirData->header.entryCnt; i++) {
-                res.push_back(dirData->entries[i]);
-            }
-        }
-        return res;
+    void RamDisk::create(vfs::Node& vfsNode, vfs::NodeType type) {
+        auto freeINode = getFreeINode();
+        Node& node = nodes[freeINode];
+        node.blocksInUse = 0;
+        node.inode = freeINode;
+        node.size = 0;
+        node.type = type;
+        populateVFSNode(vfsNode, freeINode);
     }
 
-    int RamDisk::read(Resource* resource, uint32_t offset, uint32_t size, uint8_t* buffer) const {
-        auto* node = getNode(resource->inode);
+    void RamDisk::remove(vfs::Node& vfsNode) {
+        auto inode = vfsNode.resource.inode;
+        auto& node = nodes[inode];
+        for (int i = 0; i < node.blocksInUse; i++) {
+            auto blockNum = getDataBlockNumber(node.dataBlocks[i]);
+            freeDataBlock(blockNum);
+        }
+        freeINode(inode);
+    }
+
+    int RamDisk::read(const Resource& resource, uint32_t offset, uint32_t size, uint8_t* buffer) const {
+        auto* node = getNode(resource.inode);
         // Can't read more than possible.
         size = min(size, node->size - offset);
 
@@ -46,12 +50,8 @@ namespace fs {
         return bytesRead;
     }
 
-    int RamDisk::write(Resource* resource, uint32_t offset, uint32_t size, uint8_t* buffer) {
-        auto* node = getNode(resource->inode);
-        if (offset >= node->size) {
-            printf("Invalid offset to write when size is : %d, offset: %d", node->size, offset);
-            return 0;
-        }
+    int RamDisk::write(Resource& resource, uint32_t offset, uint32_t size, uint8_t* buffer) {
+        auto* node = getNode(resource.inode);
         // Can't write more than possible.
         size = min(size, MaxDataBlocks * BlockSize - offset);
         int prevDoneInBlock = offset % BlockSize, bytesWritten = 0;
@@ -71,18 +71,34 @@ namespace fs {
             prevDoneInBlock = 0;
         }
         node->size = max(node->size, offset + bytesWritten);
-        resource->size = node->size;
+        resource.size = node->size;
         return bytesWritten;
     }
 
-    void RamDisk::makeDir(vfs::Node& vfsNode) {
-        auto freeINode = getFreeINode();
-        Node& node = nodes[freeINode];
-        node.blocksInUse = 0;
-        node.inode = freeINode;
-        node.size = 0;
-        node.type = vfs::NodeType::DIRECTORY;
-        populateVFSNode(vfsNode, freeINode);
+    Vector<vfs::DirEntry> RamDisk::readDir(const vfs::Node& vfsNode) const {
+        auto inode = vfsNode.resource.inode;
+        auto* node = getNode(inode);
+
+        assert(node->type == vfs::NodeType::DIRECTORY, "Can't readDir on non dir type inode");
+
+        Vector<vfs::DirEntry> res;
+        for (int block = 0; block < node->blocksInUse; block++) {
+            Dir* dirData = (Dir*)node->dataBlocks[block];
+            for (int i = 0; i < dirData->header.entryCnt; i++) {
+                res.push_back(dirData->entries[i]);
+            }
+        }
+        return res;
+    }
+
+    void RamDisk::writeDir(vfs::Node& vfsNode, const Vector<vfs::DirEntry>& entries) {
+        auto inode = vfsNode.resource.inode;
+        auto* node = getNode(inode);
+
+        auto data = &entries[0];
+        auto dataSize = entries.size() * sizeof(vfs::DirEntry);
+
+        write(vfsNode.resource, node->size, dataSize, (uint8_t*)data);
     }
 
     void RamDisk::populateVFSNode(vfs::Node& vfsNode, int inode) {
@@ -90,9 +106,9 @@ namespace fs {
 
         vfsNode.fileSystem = this;
         vfsNode.type = node->type;
-        vfsNode.resource->deviceID = deviceID;
-        vfsNode.resource->inode = node->inode;
-        vfsNode.resource->size = node->size;
+        vfsNode.resource.deviceID = deviceID;
+        vfsNode.resource.inode = node->inode;
+        vfsNode.resource.size = node->size;
     }
 
     int RamDisk::getFreeDataBlock()  noexcept {
@@ -113,4 +129,11 @@ namespace fs {
         return -1;
     }
 
+    void RamDisk::freeINode(int inode) {
+        nodes[inode].type = vfs::NodeType::INVALID;
+    }
+
+    void RamDisk::freeDataBlock(int block) {
+        dataBitset[block] = 0;
+    }
 }

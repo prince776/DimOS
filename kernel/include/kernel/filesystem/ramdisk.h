@@ -18,7 +18,7 @@ namespace fs {
         static constexpr int BlockSize = 512;
         static constexpr int MaxDataBlocks = 10;
         int deviceID{};
-
+        RamDisk() = default;
         RamDisk(void* base, int deviceID);
         // Data structures
         struct DataBlock {
@@ -46,18 +46,25 @@ namespace fs {
         } __attribute__((packed));
 
         // methods
-        Vector<vfs::DirEntry> readDir(const vfs::Node& vfsNode) const override;
-        int read(Resource* resource, uint32_t offset, uint32_t size, uint8_t* buffer) const override;
-        int write(Resource* resource, uint32_t offset, uint32_t size, uint8_t* buffer)  override;
-        void populateVFSNode(vfs::Node& vfsNode, int inode)  override;
-        void makeDir(vfs::Node& node) override;
+        void create(vfs::Node& node, vfs::NodeType type) override;
+        void remove(vfs::Node& node) override;
 
+        int read(const Resource& resource, uint32_t offset, uint32_t size, uint8_t* buffer) const override;
+        int write(Resource& resource, uint32_t offset, uint32_t size, uint8_t* buffer)  override;
+
+        Vector<vfs::DirEntry> readDir(const vfs::Node& vfsNode) const override;
+        void writeDir(vfs::Node& node, const Vector<vfs::DirEntry>& entries) override;
+
+        void populateVFSNode(vfs::Node& vfsNode, int inode)  override;
     private:
         int getFreeDataBlock()  noexcept;
         int getFreeINode() noexcept;
         const Node* getNode(int32_t inode) const { return &nodes[inode]; }
         Node* getNode(int32_t inode) { return &nodes[inode]; }
 
+        void freeDataBlock(int block) noexcept;
+        void freeINode(int inode) noexcept;
+        int getDataBlockNumber(DataBlock* block) { return block - dataBlocks; }
     private:
         Super* super;
         Node* nodes;
@@ -73,6 +80,7 @@ namespace fs {
             void deallocate(const Blk&) {}
             bool owns(const Blk& blk) { return data.ptr == blk.ptr; }
         };
+        using DataBitsetAllocatorTest = AllocatorTester<DataBitsetAllocator>;
         Bitset<DataBitsetAllocator> dataBitset;
         DataBlock* dataBlocks;
     };

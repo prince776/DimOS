@@ -108,7 +108,8 @@ public:
     T& operator[](size_t index) { return get()[index]; }
     const T& operator[](size_t index) const { return get()[index]; }
 
-    T* get() const noexcept { return (T*)data.ptr; }
+    const T* get() const noexcept { return (T*)data.ptr; }
+    T* get() noexcept { return (T*)data.ptr; }
 
 private:
     Blk data;
@@ -120,19 +121,19 @@ template <typename T, typename... Args, Allocator Alloc = Mallocator>
 UniquePtr<T> makeUnique(Args&&... args) {
     Alloc allocator{};
     auto blk = allocator.allocate(sizeof(T));
-    return UniquePtr<T>(new (blk.ptr) T(forward<Args>(args)...), allocator);
+    return UniquePtr<T, Alloc>(new (blk.ptr) T(forward<Args>(args)...), allocator);
 }
 
 template <typename T, typename... Args, Allocator Alloc>
     requires(!is_array_v<T>)
 UniquePtr<T> makeUnique(Alloc allocator, Args&&... args) {
     auto blk = allocator.allocate(sizeof(T));
-    return UniquePtr<T>(new (blk.ptr) T(forward<Args>(args)...), allocator);
+    return UniquePtr<T, Alloc>(new (blk.ptr) T(forward<Args>(args)...), allocator);
 }
 
 template <typename T, Allocator Alloc = Mallocator>
     requires(is_array_v<T>)
-UniquePtr<T> makeUnique(size_t num) {
+auto makeUnique(size_t num) {
     Alloc allocator{};
     using baseT = remove_extent_t<T>;
     Blk blk = allocator.allocate(sizeof(baseT) * num);
@@ -140,18 +141,18 @@ UniquePtr<T> makeUnique(size_t num) {
         baseT* ptr = ((baseT*)blk.ptr) + i;
         new (ptr) baseT();
     }
-    return UniquePtr<T>(blk, allocator);
+    return UniquePtr<T, Alloc>(blk, allocator);
 }
 
 template <typename T, Allocator Alloc = Mallocator>
     requires(is_array_v<T>)
-UniquePtr<T> makeUnique(Alloc allocator, size_t num) {
+auto makeUnique(Alloc allocator, size_t num) {
     using baseT = remove_extent_t<T>;
     Blk blk = allocator.allocate(sizeof(baseT) * num);
     for (size_t i = 0; i < num; i++) {
         baseT* ptr = ((baseT*)blk.ptr) + i;
         new (ptr) baseT();
     }
-    return UniquePtr<T>(blk, allocator);
+    return UniquePtr<T, Alloc>(blk, allocator);
 }
 

@@ -10,12 +10,12 @@ public:
     Vector(Alloc allocator = {}): allocator(allocator) {}
     Vector(size_t size, Alloc allocator = {})
         : m_size(size), capacity(size), allocator(allocator) {
-        data = makeUnique<T[]>(allocator, capacity);
+        data = makeUnique<T[], Alloc>(allocator, capacity);
         fill(T{});
     }
     Vector(size_t size, const T& val, Alloc allocator = {})
         : m_size(size), capacity(size), allocator(allocator) {
-        data = makeUnique<T[]>(allocator, capacity);
+        data = makeUnique<T[], Alloc>(allocator, capacity);
         fill(val);
     }
     Vector(const Vector<T, Alloc>& v) {
@@ -86,8 +86,8 @@ public:
     ForwardIterator<T> end() noexcept {
         return ForwardIterator(&data[0] + m_size);
     }
-    const ForwardIterator<T> begin() const noexcept { return ForwardIterator(&data[0]); }
-    const ForwardIterator<T> end() const noexcept {
+    const ForwardIterator<const T> begin() const noexcept { return ForwardIterator(&data[0]); }
+    const ForwardIterator<const T> end() const noexcept {
         return ForwardIterator(&data[0] + m_size);
     }
 
@@ -114,6 +114,26 @@ public:
         return !(*this == other);
     }
 
+    int find(T c, int begin = 0) const {
+        for (int i = begin; i < size(); i++) {
+            if ((*this)[i] == c) {
+                return i;
+            }
+        }
+        return npos;
+    }
+
+    // swaps the element to back and calls pop_back().
+    // Side effect: changes ordering of elements.
+    void fastErase(int pos) {
+        if (pos == npos) return;
+        if (pos != (size() - 1)) {
+            swap(this->operator[](pos), this->operator[](size() - 1));
+        }
+        pop_back();
+    }
+
+    static const int npos = -1;
 protected:
     void fill(const T& val) {
         for (size_t i = 0; i < m_size; i++) {
@@ -139,7 +159,7 @@ protected:
     }
 
 protected:
-    UniquePtr<T[]> data;
+    UniquePtr<T[], Alloc> data;
     Alloc allocator;
     size_t m_size = 0, capacity = 0;
 };
