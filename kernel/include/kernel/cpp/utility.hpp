@@ -1,6 +1,7 @@
 #pragma once
 #include <kernel/cpp/type-traits.hpp>
 #include <kernel/common.h>
+#include <stddef.h>
 
 template<typename T>
 [[ nodiscard ]]
@@ -21,10 +22,23 @@ constexpr void assert(bool condition) {
         panic("Assert failed.");
     }
 }
+constexpr void assert(bool condition, const char* msg) {
+    if (!condition) {
+        panic(msg);
+    }
+}
 
 template<typename T>
 constexpr const T& min(const T& a, const T& b) {
     if (a < b) {
+        return a;
+    }
+    return b;
+}
+
+template<typename T>
+constexpr const T& max(const T& a, const T& b) {
+    if (a > b) {
         return a;
     }
     return b;
@@ -36,3 +50,9 @@ void swap(T& a, T& b) {
     a = move(b);
     b = move(temp);
 }
+
+///////// Placement new/delete //////////
+inline void* operator new(size_t, void* p)     throw() { return p; }
+inline void* operator new[](size_t, void* p)   throw() { return p; }
+inline void  operator delete  (void*, void*) throw() { };
+inline void  operator delete[](void*, void*) throw() {};

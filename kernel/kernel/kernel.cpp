@@ -16,6 +16,8 @@
 #include <kernel/devices/pit.h>
 #include <kernel/isr.h>
 #include <kernel/concurrency/primitives.h>
+#include <kernel/filesystem/vfs.h>
+#include <demo/terminal.hpp>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -64,25 +66,6 @@ extern "C" void kernel_early() {
 
 Vector<kernel::Thread> kthreads;
 size_t currKThreadIdx = 0;
-
-int64_t counter = 0;
-constexpr int CNT = 8;
-MutexLock lock;
-ConditionVariable condn;
-
-void func() {
-    for (int64_t i = 0; i < CNT; i++) {
-        if (i % 5 == 0) condn.notifyOne();
-        lock.acquireLock();
-        if (i % 5 == 0) {
-            condn.wait(lock);
-        }
-        counter += i;
-        printf("In thread %d, adding %d\n", kernel::thisThread().id, i);
-        lock.releaseLock();
-    }
-    printf("Final Value: %l\n", counter);
-}
 
 extern "C" void kernel_main(void) {
 
@@ -134,29 +117,38 @@ extern "C" void kernel_main(void) {
     kthreads.push_back(kernel::Thread(0));
     kthreads[0].state = TaskState::COMPLETED;
 
-    // kthreads.push_back(kernel::Thread((uint64_t)&kthread1));
-    // kthreads.push_back(kernel::Thread((uint64_t)&kthread2));
-    // kthreads.push_back(kernel::Thread((uint64_t)&kthread2));
-    // kthreads.push_back(kernel::Thread((uint64_t)&kthread2));
-    // kthreads.push_back(kernel::Thread((uint64_t)&kthread2));
-    kthreads.push_back(kernel::Thread(&func));
-    kthreads.push_back(kernel::Thread(&func));
-    kthreads.push_back(kernel::Thread(&func));
-
-    // for (auto& x : local) {
-    //     printf("KThread: rsp: %x, rip: %x, id: %d \n", x.rsp, x.rip, x.id);
-    // }
-    for (int _ = 0; _ < 3; _++) {
-        for (int64_t i = 0; i < CNT; i++) {
-            counter += i;
-        }
-    }
-    printf("Final Value: %l\n", counter);
-    counter = 0;
     {
-        registerInterruptHandler(pic::PIC1Offset, premptiveScheduler);
-        pit::init(1);
+        // registerInterruptHandler(pic::PIC1Offset, premptiveScheduler);
+        // pit::init(1);
     }
+
+    auto terminal = demo::Terminal();
+    terminal.pwd();
+    terminal.mkdir("dir1");
+    terminal.mkdir("dir2");
+    terminal.ls();
+
+    terminal.rmdir("dir1");
+    terminal.mkdir("newDir");
+    terminal.ls();
+
+    terminal.cd("newDir");
+    terminal.pwd();
+    terminal.ls();
+
+    terminal.touch("file1");
+    terminal.touch("file2");
+    terminal.touch("file3");
+    terminal.touch("file4");
+    terminal.rm("file2");
+    terminal.touch("file5");
+    terminal.ls();
+
+    char buffer[] = "This is some data.";
+    char readBuffer[1024];
+
+    terminal.writeFile("file1", (uint8_t*)buffer, sizeof(buffer));
+    terminal.readFile("file1", (uint8_t*)readBuffer, sizeof(buffer));
 
     panic("Nothing to do\n");
 }

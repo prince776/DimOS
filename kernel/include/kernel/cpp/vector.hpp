@@ -3,21 +3,44 @@
 #include <kernel/cpp/iterator.hpp>
 #include <kernel/cpp/unique-ptr.hpp>
 
-template <typename T>
+template <typename T, Allocator Alloc = Mallocator>
 class Vector {
 public:
     // Constructors
-    Vector() = default;
-    Vector(size_t size): m_size(size), capacity(size) {
-        data = makeUnique<T[]>(capacity);
+    Vector(Alloc allocator = {}): allocator(allocator) {}
+    Vector(size_t size, Alloc allocator = {})
+        : m_size(size), capacity(size), allocator(allocator) {
+        data = makeUnique<T[], Alloc>(allocator, capacity);
         fill(T{});
     }
-    Vector(size_t size, const T& val): m_size(size), capacity(size) {
-        data = makeUnique<T[]>(capacity);
+    Vector(size_t size, const T& val, Alloc allocator = {})
+        : m_size(size), capacity(size), allocator(allocator) {
+        data = makeUnique<T[], Alloc>(allocator, capacity);
         fill(val);
     }
-    // Vector(std::initializer_list<T> ini)
-    //     : size(ini.size()), capacity(ini.size()) {
+    Vector(const Vector<T, Alloc>& v) {
+        allocator = v.allocator;
+        m_size = v.size();
+        capacity = v.capacity;
+        data.~UniquePtr();
+        data = makeUnique<T[], Alloc>(allocator, capacity);
+        for (int i = 0; i < v.size(); i++) {
+            data[i] = v[i];
+        }
+    }
+    Vector& operator=(const Vector<T, Alloc>& v) {
+        allocator = v.allocator;
+        m_size = v.size();
+        capacity = v.capacity;
+        data.~UniquePtr();
+        data = makeUnique<T[], Alloc>(allocator, capacity);
+        for (int i = 0; i < v.size(); i++) {
+            data[i] = v[i];
+        }
+        return *this;
+    }
+    // Vector(std::initializer_list<T> ini, Alloc allocator = {})
+    //     : m_size(ini.size()), capacity(ini.size()), allocator(allocator) {
     //     data = makeUnique<T[]>(capacity);
     //     auto it = begin();
     //     for (const auto& val : ini) {
@@ -63,6 +86,10 @@ public:
     ForwardIterator<T> end() noexcept {
         return ForwardIterator(&data[0] + m_size);
     }
+    const ForwardIterator<const T> begin() const noexcept { return ForwardIterator(&data[0]); }
+    const ForwardIterator<const T> end() const noexcept {
+        return ForwardIterator(&data[0] + m_size);
+    }
 
     // Random access
     T& operator[](size_t idx) noexcept { return data[idx]; }
@@ -72,7 +99,42 @@ public:
         return (*this)[idx];
     }
 
-private:
+    bool operator==(const Vector& other) const noexcept {
+        if (size() != other.size()) {
+            return false;
+        }
+        for (int i = 0; i < size(); i++) {
+            if ((*this)[i] != other[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    bool operator!=(const Vector& other) const noexcept {
+        return !(*this == other);
+    }
+
+    int find(T c, int begin = 0) const {
+        for (int i = begin; i < size(); i++) {
+            if ((*this)[i] == c) {
+                return i;
+            }
+        }
+        return npos;
+    }
+
+    // swaps the element to back and calls pop_back().
+    // Side effect: changes ordering of elements.
+    void fastErase(int pos) {
+        if (pos == npos) return;
+        if (pos != (size() - 1)) {
+            swap(this->operator[](pos), this->operator[](size() - 1));
+        }
+        pop_back();
+    }
+
+    static const int npos = -1;
+protected:
     void fill(const T& val) {
         for (size_t i = 0; i < m_size; i++) {
             data[i] = val;
@@ -96,7 +158,8 @@ private:
         capacity = newCapacity;
     }
 
-private:
-    UniquePtr<T[]> data;
+protected:
+    UniquePtr<T[], Alloc> data;
+    Alloc allocator;
     size_t m_size = 0, capacity = 0;
 };
