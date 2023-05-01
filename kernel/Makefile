@@ -64,6 +64,7 @@ kernel/filesystem/vfs.o \
 kernel/concurrency/primitives.o \
 kernel/devices/pic.o \
 kernel/devices/pit.o \
+kernel/devices/keyboard.o \
 kernel/demo/demo.o
 
 OBJS=\
