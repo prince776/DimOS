@@ -28,7 +28,7 @@ extern "C" void isr_handler(ISRFrame * frame) {
 
 
     if (isrNum >= pic::PIC1Offset && isrNum < pic::PIC2End) {
-        printf("singaling EOI\n");
+        // printf("singaling EOI for isr: %d\n", isrNum);
         pic::signalEOI(isrNum);
     }
 }

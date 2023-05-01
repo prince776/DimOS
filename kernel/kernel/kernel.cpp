@@ -18,6 +18,7 @@
 #include <kernel/concurrency/primitives.h>
 #include <kernel/filesystem/vfs.h>
 #include <demo/terminal.hpp>
+#include <kernel/devices/keyboard.h>
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
@@ -150,5 +151,29 @@ extern "C" void kernel_main(void) {
     terminal.writeFile("file1", (uint8_t*)buffer, sizeof(buffer));
     terminal.readFile("file1", (uint8_t*)readBuffer, sizeof(buffer));
 
+    auto& keyboard = Keyboard::get();
+    keyboard.install();
+
+    auto getch = [&keyboard]() {
+        auto keycode = Keyboard::KEY_UNKNOWN;
+        while (keycode == Keyboard::KEY_UNKNOWN) {
+            keycode = keyboard.getLastKeyCode();
+        }
+        keyboard.discardLastKeyCode();
+        return keycode;
+    };
+
+    while (true) {
+        auto key = getch();
+        auto c = keyboard.keyCodeToASCII(key);
+        if (c) {
+            printf("Input detected: %c\n", c);
+        }
+        else {
+            printf("Bad input detected, keycode: %d\n", key);
+        }
+    }
+
     panic("Nothing to do\n");
 }
+
