@@ -2,6 +2,7 @@
 #include <stdint-gcc.h>
 #include <kernel/isr.h>
 
+// Big part of this copied from BrokenThorn tutorial.
 class Keyboard {
 private:
     Keyboard()

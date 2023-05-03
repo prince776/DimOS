@@ -5,6 +5,7 @@
 #include <kernel/cpp/vector.hpp>
 #include <kernel/isr.h>
 #include <kernel/isr.h>
+#include <kernel/filesystem/vfs.h>
 
 enum class TaskState {
     NOT_STARTED = 0,
@@ -19,10 +20,40 @@ inline bool isRunnableState(TaskState state) {
     return state == TaskState::NOT_STARTED || state == TaskState::RUNNING;
 }
 
+extern vfs::VFS globalVFS;
+
 namespace kernel {
     void threadRunWrapper();
 
     class Thread;
+
+    // Ok with keyboard adding to stdin and we reading in threads, we have, CONCURRENCY
+    // TODO: Figure out where to put locks.
+    class FileDescriptor {
+        uint32_t readOffset{}, writeOffset{};
+        vfs::Node* fileNode{};
+    public:
+        FileDescriptor() = default;
+        FileDescriptor(vfs::Node* fileNode) : fileNode(fileNode), readOffset(0), writeOffset(0) {}
+
+        bool canReadXbytes(int x) {
+            int remainingSize = fileNode->resource.size - (int)readOffset;
+
+            return remainingSize >= x;
+        }
+
+        int read(uint32_t limit, uint8_t* buffer) {
+            int bytesRead = fileNode->read(readOffset, limit, buffer);
+            readOffset += bytesRead;
+            return bytesRead;
+        }
+
+        int write(uint32_t limit, uint8_t* buffer) {
+            int bytesWritten = fileNode->write(writeOffset, limit, buffer);
+            writeOffset += bytesWritten;
+            return bytesWritten;
+        }
+    };
 
     struct ExecContext {
         uint64_t rsp = 0; // stack pointer
@@ -31,7 +62,7 @@ namespace kernel {
         uint64_t rflags = 514; // duh
 
         ExecContext() = default;
-        ExecContext(uint64_t newRip): rip(newRip) {}
+        ExecContext(uint64_t newRip) : rip(newRip) {}
     };
 
     static constexpr uint64_t stackSize = 64 * 1024;
@@ -58,6 +89,8 @@ namespace kernel {
         TaskState state = TaskState::NOT_STARTED;
         void(*runFunc)(void);
 
+        Vector<FileDescriptor> fileDescriptors;
+
         Thread() = default;
 
         Thread(void(*func)(void))
@@ -70,6 +103,13 @@ namespace kernel {
             execContext.rsp = (uint64_t)stackMem.get() + stackSize - 4096;
 
             resetContextSwitchInfo();
+
+
+            String<> stdinPath = String<>("/proc/stdin_") + stoi(id);
+            String<> stdoutPath = String<>("/proc/stdout_") + stoi(id);
+
+            fileDescriptors.push_back(FileDescriptor(globalVFS.mkfile(stdinPath)));
+            fileDescriptors.push_back(FileDescriptor(globalVFS.mkfile(stdoutPath)));
         }
 
         void copyFromISRFrame(const ISRFrame& context) {

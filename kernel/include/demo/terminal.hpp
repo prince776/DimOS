@@ -38,13 +38,15 @@ namespace demo {
             };
         }
 
+        // TODO: clear the stdin file at some threshold.
         Keyboard::KeyCode getch() {
-            auto& keyboard = Keyboard::get();
-            auto key = keyboard.getLastKeyCode();
-            while (key == Keyboard::KEY_UNKNOWN) {
-                key = keyboard.getLastKeyCode();
+            auto& stdinFileDescriptor = kernel::thisThread().fileDescriptors[0];
+            Keyboard::KeyCode key;
+            while (!stdinFileDescriptor.canReadXbytes(sizeof(key))) {
+                // spin                
             }
-            keyboard.discardLastKeyCode();
+
+            stdinFileDescriptor.read(sizeof(key), (uint8_t*)&key);
             return key;
         }
 

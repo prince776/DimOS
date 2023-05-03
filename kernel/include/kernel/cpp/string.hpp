@@ -132,3 +132,13 @@ public:
 private:
     Vector<char, Alloc> data;
 };
+
+inline String<> stoi(int n) {
+    String<> res = "";
+    while (n > 0) {
+        res += ('0' + (n % 10));
+        n /= 10;
+    }
+    res.reverse();
+    return res;
+}

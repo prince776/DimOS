@@ -34,6 +34,7 @@ namespace vfs {
         parentNode->children.push_back(dirNode);
 
         parentNode->writeDir(Vector<DirEntry>(1, DirEntry::fromStringName(dirName, dirNode->resource.inode)));
+        return dirNode;
     }
 
     Node* VFS::mkfile(const String<>& path) {
@@ -48,13 +49,14 @@ namespace vfs {
         if (!parentNode) {
             return nullptr;
         }
-        Node* dirNode = new Node(parentNode->fileSystem);
-        dirNode->mkFile();
-        dirNode->name = fileName;
-        dirNode->parent = parentNode;
-        parentNode->children.push_back(dirNode);
+        Node* fileNode = new Node(parentNode->fileSystem);
+        fileNode->mkFile();
+        fileNode->name = fileName;
+        fileNode->parent = parentNode;
+        parentNode->children.push_back(fileNode);
 
-        parentNode->writeDir(Vector<DirEntry>(1, DirEntry::fromStringName(fileName, dirNode->resource.inode)));
+        parentNode->writeDir(Vector<DirEntry>(1, DirEntry::fromStringName(fileName, fileNode->resource.inode)));
+        return fileNode;
     }
 
     void VFS::rmdir(const String<>& path) {

@@ -2,6 +2,10 @@
 #include <kernel/devices/pic.h>
 #include <kernel/x64.h>
 #include <stdio.h>
+#include <kernel/filesystem/vfs.h>
+#include <kernel/process/kthread.h>
+
+extern vfs::VFS globalVFS;
 
 Keyboard::KeyCode Keyboard::getLastKeyCode() {
     if (scancode == INVALID_SCANCODE) {
@@ -147,6 +151,15 @@ void Keyboard::isrHandler(ISRFrame* frame) {
             break;
         }
     }
+
+    // TODO: ok so here we are writing to a file, that is we need concurrency, but acquiring lock in isr
+    // may not work, just a reminder.
+    auto key = device.getLastKeyCode();
+    if (key != KEY_UNKNOWN) {
+        auto& stdinFileDescriptor = kernel::thisThread().fileDescriptors[0];
+        stdinFileDescriptor.write(sizeof(key), (uint8_t*)&key);
+    }
+    device.discardLastKeyCode();
 }
 
 static bool isascii(char c) {

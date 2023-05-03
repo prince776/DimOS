@@ -116,22 +116,35 @@ extern "C" void kernel_main(void) {
     MallocHeap::init();
     printf("Memory Management System Activated!\n");
 
-    // Insert a finished thread that represents curr thread.
-    kthreads.push_back(kernel::Thread(0));
-    kthreads[0].state = TaskState::COMPLETED;
-
     // Intialize file system.
     auto rdfs = demo::Terminal::createRamdisk(50, 50);
     globalVFS = vfs::VFS((FileSystem*)&rdfs);
 
     // Initialize kernel thread related stuff in fs
-    globalVFS.mkdir("/kproc");
+    globalVFS.mkdir("/proc");
 
     // Initialize devices
     Keyboard::get().install();
 
+    // Insert a finished thread that represents curr thread.
+    kthreads.push_back(kernel::Thread(0));
+    kthreads[0].state = TaskState::COMPLETED;
+
+
     auto terminal = demo::Terminal("prince");
+
+    terminal.cd("proc");
+    terminal.ls();
+
+    // auto& fd = kernel::thisThread().fileDescriptors[0];
+    // int buffer = 997;
+    // fd.write(sizeof(buffer), (uint8_t*)&buffer);
+    // long long newBuf = 0;
+    // fd.read(sizeof(buffer), (uint8_t*)&newBuf);
+
+    // printf("Read data: %d\n", newBuf);
     terminal.run();
+
 
     {
         // registerInterruptHandler(pic::PIC1Offset, premptiveScheduler);

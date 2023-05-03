@@ -2,7 +2,7 @@
 
 namespace fs {
 
-    RamDisk::RamDisk(void* base, int deviceID): deviceID(deviceID) {
+    RamDisk::RamDisk(void* base, int deviceID) : deviceID(deviceID) {
         super = (Super*)base;
         nodes = (Node*)(base + sizeof(Super));
         Blk dataBitsetMemBlk = Blk{
@@ -29,6 +29,8 @@ namespace fs {
         uint8_t buffer[BlockSize];
         memset(buffer, 0, BlockSize);
         write(vfsNode.resource, 0, BlockSize, buffer);
+        node.size = 0;
+        vfsNode.resource.size = 0;
     }
 
     void RamDisk::remove(vfs::Node& vfsNode) {
