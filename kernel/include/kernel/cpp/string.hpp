@@ -37,6 +37,12 @@ public:
             data.push_back(val);
         }
         data.push_back('\0');
+        return *this;
+    }
+
+    String& operator+=(char c) {
+        push_back(c);
+        return *this;
     }
 
     String operator+(const String& rhs) const {

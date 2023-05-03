@@ -2,15 +2,82 @@
 #include <kernel/cpp/string.hpp>
 #include <kernel/filesystem/vfs.h>
 #include <kernel/filesystem/ramdisk.h>
+#include <kernel/devices/keyboard.h>
+
+extern vfs::VFS globalVFS;
 
 namespace demo {
 
+    struct Command {
+        String<> bin;
+        Vector<String<>> args;
+    };
+
     class Terminal {
     public:
-        Terminal() {
-            rdfs = createRamdisk(10, 10);
-            currDir = "";
-            vfs = vfs::VFS((FileSystem*)&rdfs, 0, "");
+        Terminal(String<> username)
+            : currDir(""), username(username), vfs(globalVFS) {}
+
+        void run() {
+            printf("\n\e[1;34m----------------------------------------------------------------------------------------------------------------------------------------------\n");
+            printf("\t\t\t\t\t\t\tLanding into kernel shell!!\n");
+            printf("----------------------------------------------------------------------------------------------------------------------------------------------\n\e[0m");
+            while (true) {
+                printf("\e[1;31m%s @ %s/ > \e[0m", username.c_str(), currDir.c_str());
+                auto line = readLine(true);
+                auto cmd = parseCommand(line);
+
+            }
+        }
+
+        Command parseCommand(const String<>& cmd) {
+            auto tokens = cmd.split(' ');
+            return Command{
+                .bin = tokens[0],
+                .args = tokens,
+            };
+        }
+
+        Keyboard::KeyCode getch() {
+            auto& keyboard = Keyboard::get();
+            auto key = keyboard.getLastKeyCode();
+            while (key == Keyboard::KEY_UNKNOWN) {
+                key = keyboard.getLastKeyCode();
+            }
+            keyboard.discardLastKeyCode();
+            return key;
+        }
+
+        char getChar() {
+            auto& keyboard = Keyboard::get();
+            while (true) {
+                auto key = getch();
+                auto ch = keyboard.keyCodeToASCII(key);
+                if (ch) {
+                    return ch;
+                }
+            }
+            return 0;
+        }
+
+        String<> readLine(bool print = false) {
+            String<> line = "";
+            Keyboard::KeyCode key;
+            auto& keyboard = Keyboard::get();
+            do {
+                key = getch();
+                auto c = keyboard.keyCodeToASCII(key);
+                if (c && c != '\n') {
+                    if (c != '\n') {
+                        printf("%c", c);
+                        line += c;
+                    }
+                }
+            } while (key != Keyboard::KEY_RETURN);
+            if (print) {
+                printf("\n");
+            }
+            return line;
         }
 
         String<> ls() {
@@ -90,9 +157,8 @@ namespace demo {
             }
         }
 
-    private:
 
-        fs::RamDisk createRamdisk(int nodeCount, int blockCount) {
+        static fs::RamDisk createRamdisk(int nodeCount, int blockCount) {
             int dataBitsetSize = (blockCount + 7) / 8;
             int size = sizeof(fs::RamDisk::Super) + sizeof(fs::RamDisk::Node) * nodeCount + dataBitsetSize + fs::RamDisk::BlockSize * blockCount;
 
@@ -110,9 +176,9 @@ namespace demo {
         }
 
     private:
-        vfs::VFS vfs;
         String<> currDir{};
-        fs::RamDisk rdfs;
+        String<> username;
+        vfs::VFS& vfs;
     };
 
 }

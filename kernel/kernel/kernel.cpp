@@ -68,6 +68,8 @@ extern "C" void kernel_early() {
 Vector<kernel::Thread> kthreads;
 size_t currKThreadIdx = 0;
 
+vfs::VFS globalVFS;
+
 extern "C" void kernel_main(void) {
 
     // *************** Parse the Memory Map **************************//
@@ -118,62 +120,23 @@ extern "C" void kernel_main(void) {
     kthreads.push_back(kernel::Thread(0));
     kthreads[0].state = TaskState::COMPLETED;
 
+    // Intialize file system.
+    auto rdfs = demo::Terminal::createRamdisk(50, 50);
+    globalVFS = vfs::VFS((FileSystem*)&rdfs);
+
+    // Initialize kernel thread related stuff in fs
+    globalVFS.mkdir("/kproc");
+
+    // Initialize devices
+    Keyboard::get().install();
+
+    auto terminal = demo::Terminal("prince");
+    terminal.run();
+
     {
         // registerInterruptHandler(pic::PIC1Offset, premptiveScheduler);
         // pit::init(1);
     }
-
-    auto terminal = demo::Terminal();
-    terminal.pwd();
-    terminal.mkdir("dir1");
-    terminal.mkdir("dir2");
-    terminal.ls();
-
-    terminal.rmdir("dir1");
-    terminal.mkdir("newDir");
-    terminal.ls();
-
-    terminal.cd("newDir");
-    terminal.pwd();
-    terminal.ls();
-
-    terminal.touch("file1");
-    terminal.touch("file2");
-    terminal.touch("file3");
-    terminal.touch("file4");
-    terminal.rm("file2");
-    terminal.touch("file5");
-    terminal.ls();
-
-    char buffer[] = "This is some data.";
-    char readBuffer[1024];
-
-    terminal.writeFile("file1", (uint8_t*)buffer, sizeof(buffer));
-    terminal.readFile("file1", (uint8_t*)readBuffer, sizeof(buffer));
-
-    auto& keyboard = Keyboard::get();
-    keyboard.install();
-
-    auto getch = [&keyboard]() {
-        auto keycode = Keyboard::KEY_UNKNOWN;
-        while (keycode == Keyboard::KEY_UNKNOWN) {
-            keycode = keyboard.getLastKeyCode();
-        }
-        keyboard.discardLastKeyCode();
-        return keycode;
-    };
-
-    while (true) {
-        auto key = getch();
-        auto c = keyboard.keyCodeToASCII(key);
-        if (c) {
-            printf("Input detected: %c\n", c);
-        }
-        else {
-            printf("Bad input detected, keycode: %d\n", key);
-        }
-    }
-
     panic("Nothing to do\n");
 }
 

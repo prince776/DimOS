@@ -119,5 +119,4 @@ namespace vfs {
         Node* resolvePathUtil(Node* curr, const Vector<String<>>& pathEntries, int idx);
         void addChildren(Node* node);
     };
-
 }
