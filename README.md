@@ -16,17 +16,20 @@ A x86_64 Operating System. An OS with a future that's not quite bright.
 - [x] Preemptive Multitasking using timer interupts (PIT)
 - [x] Round Robin Scheduler
 - [x] Concurrency primitives (Mutex, Condition Variable, and Semaphore)
-- [x] File system
+- [x] Virtual File System
+- [x] Custom Ramdisk file system
+- [x] Keyboard support
+- [x] Kernel space shell
 - [ ] Userland process and threads
 - [ ] System Calls
-- [ ] Shell
+- [ ] Users pace Shell
 - [ ] Actual libc
 - [ ] Network Stack
 - [ ] Basic GUI...
 
-Here's the kernel doing multithreaded addition on a shared variable with Mutex and Condition variables:
+Here's a basic demo of the kernel space shell
 
-![Image](https://media.discordapp.net/attachments/912603519054401539/1064951522078773348/demo.png?width=1558&height=1004)
+![Image](https://media.discordapp.net/attachments/912603519054401539/1104440866535375008/image.png?width=1562&height=1012)
 
 ## Build Instructions
 
