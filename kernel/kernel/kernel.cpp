@@ -133,8 +133,8 @@ extern "C" void kernel_main(void) {
 
     auto terminal = demo::Terminal("prince");
 
-    terminal.cd("proc");
-    terminal.ls();
+    // terminal.cd("proc");
+    // terminal.ls();
 
     // auto& fd = kernel::thisThread().fileDescriptors[0];
     // int buffer = 997;

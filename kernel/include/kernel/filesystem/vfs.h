@@ -3,6 +3,7 @@
 #include <kernel/cpp/unique-ptr.hpp>
 #include <kernel/cpp/string.hpp>
 #include <kernel/filesystem/resource.h>
+#include <kernel/concurrency/primitives.h>
 
 namespace vfs {
     struct Node;
@@ -43,7 +44,7 @@ namespace vfs {
         Vector<Node*> children;
         Node* parent;
 
-        Node(FileSystem* fs): fileSystem(fs) {}
+        Node(FileSystem* fs) : fileSystem(fs) {}
 
         void populate(FileSystem* fs, const String<>& name, int inode) {
             this->name = name;
@@ -86,6 +87,7 @@ namespace vfs {
     class VFS {
     private:
         Node* root;
+        MutexLock mutex;
     public:
         VFS() = default;
         VFS(FileSystem* fs, int inode = 0, const String<>& name = "");

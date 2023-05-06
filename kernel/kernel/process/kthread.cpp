@@ -4,6 +4,7 @@
 #include <kernel/process/scheduler.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <kernel/filesystem/vfs.h>
 
 extern Vector<kernel::Thread> kthreads;
 extern size_t currKThreadIdx;
@@ -21,8 +22,28 @@ extern "C" void scheduleKernelThread(Vector<kernel::Thread> &threads, kernel::Th
     auto& nextThread = threads[currKThreadIdx];
     return_from_interrupt(&nextThread, &contextSwitchInfo);
 }
+extern vfs::VFS globalVFS;
 
 namespace kernel {
+
+    Thread::Thread(void(*func)(void))
+        : runFunc(func) {
+        static uint64_t currId = 1;
+        id = currId++;
+
+        stackMem = makeUnique<StackSpace>();
+        execContext.rip = (uint64_t)&threadRunWrapper;
+        execContext.rsp = (uint64_t)stackMem.get() + stackSize - 4096;
+
+        resetContextSwitchInfo();
+
+        String<> stdinPath = String<>("/proc/stdin_") + stoi(id);
+        String<> stdoutPath = String<>("/proc/stdout_") + stoi(id);
+
+        fileDescriptors.push_back(FileDescriptor(globalVFS.mkfile(stdinPath)));
+        fileDescriptors.push_back(FileDescriptor(globalVFS.mkfile(stdoutPath)));
+    }
+
     Thread& thisThread() {
         return kthreads[currKThreadIdx];
     }
@@ -44,3 +65,24 @@ void premptiveScheduler(ISRFrame* isrFrame) {
     scheduleKernelThread(kthreads, prevThread);
 }
 
+namespace kernel {
+
+    bool  FileDescriptor::canReadXbytes(int x) {
+        int remainingSize = fileNode->resource.size - (int)readOffset;
+
+        return remainingSize >= x;
+    }
+
+    int FileDescriptor::read(uint32_t limit, uint8_t* buffer) {
+        int bytesRead = fileNode->read(readOffset, limit, buffer);
+
+        readOffset += bytesRead;
+        return bytesRead;
+    }
+
+    int FileDescriptor::write(uint32_t limit, uint8_t* buffer) {
+        int bytesWritten = fileNode->write(writeOffset, limit, buffer);
+        writeOffset += bytesWritten;
+        return bytesWritten;
+    }
+}
