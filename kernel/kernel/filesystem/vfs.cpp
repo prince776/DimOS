@@ -1,4 +1,5 @@
 #include <kernel/filesystem/vfs.h>
+#include <kernel/concurrency/locks.hpp>
 
 namespace vfs {
     VFS::VFS(FileSystem* fs, int inode, const String<>& name) {
@@ -7,6 +8,7 @@ namespace vfs {
     }
 
     Vector<Node*> VFS::readDir(const String<>& path) {
+        ScopedLock lock(mutex);
         Node* dirNode = resolvePath(path);
         if (dirNode == nullptr) {
             printf("Directory doesn't exist: %s\n", path.c_str());
@@ -16,6 +18,7 @@ namespace vfs {
     }
 
     Node* VFS::mkdir(const String<>& path) {
+        ScopedLock lock(mutex);
         auto parentPath = path;
         String dirName = "";
         while (parentPath.back() != '/') {
@@ -34,9 +37,11 @@ namespace vfs {
         parentNode->children.push_back(dirNode);
 
         parentNode->writeDir(Vector<DirEntry>(1, DirEntry::fromStringName(dirName, dirNode->resource.inode)));
+        return dirNode;
     }
 
     Node* VFS::mkfile(const String<>& path) {
+        ScopedLock lock(mutex);
         auto parentPath = path;
         String fileName = "";
         while (parentPath.back() != '/') {
@@ -48,16 +53,18 @@ namespace vfs {
         if (!parentNode) {
             return nullptr;
         }
-        Node* dirNode = new Node(parentNode->fileSystem);
-        dirNode->mkFile();
-        dirNode->name = fileName;
-        dirNode->parent = parentNode;
-        parentNode->children.push_back(dirNode);
+        Node* fileNode = new Node(parentNode->fileSystem);
+        fileNode->mkFile();
+        fileNode->name = fileName;
+        fileNode->parent = parentNode;
+        parentNode->children.push_back(fileNode);
 
-        parentNode->writeDir(Vector<DirEntry>(1, DirEntry::fromStringName(fileName, dirNode->resource.inode)));
+        parentNode->writeDir(Vector<DirEntry>(1, DirEntry::fromStringName(fileName, fileNode->resource.inode)));
+        return fileNode;
     }
 
     void VFS::rmdir(const String<>& path) {
+        ScopedLock lock(mutex);
         auto node = resolvePath(path);
         if (node->children.size() != 0) {
             printf("Can't remove non empty directory: %s", path.c_str());
@@ -79,6 +86,7 @@ namespace vfs {
     }
 
     void VFS::rmfile(const String<>& path) {
+        ScopedLock lock(mutex);
         auto node = resolvePath(path);
         if (node->type != NodeType::FILE) {
             printf("Can't rmfile a non file: %s", path.c_str());
@@ -96,6 +104,7 @@ namespace vfs {
     }
 
     void VFS::read(const String<>& path, uint32_t offset, uint32_t size, uint8_t* buffer) {
+        ScopedLock lock(mutex);
         auto node = resolvePath(path);
         if (!node || node->type == NodeType::INVALID) {
             printf("Can't read invalid node: %s\n", path.c_str());
@@ -105,6 +114,7 @@ namespace vfs {
     }
 
     void VFS::write(const String<>& path, uint32_t offset, uint32_t size, uint8_t* buffer) {
+        ScopedLock lock(mutex);
         auto node = resolvePath(path);
         if (!node || node->type == NodeType::INVALID) {
             printf("Can't write invalid node: %s\n", path.c_str());
@@ -114,6 +124,7 @@ namespace vfs {
     }
 
     Node* VFS::openNode(const String<>& path) {
+        ScopedLock lock(mutex);
         auto node = resolvePath(path);
         if (!node) {
             printf("Directory/file doesn't exist: %s\n", path.c_str());

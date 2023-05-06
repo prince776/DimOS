@@ -6,6 +6,32 @@
 #include <kernel/isr.h>
 #include <kernel/isr.h>
 
+namespace vfs {
+    class VFS;
+    class Node;
+}
+namespace kernel {
+    // Ok with keyboard adding to stdin and we reading in threads, we have, CONCURRENCY
+    // TODO: Figure out where to put locks.
+    class FileDescriptor {
+    private:
+        FileDescriptor(const FileDescriptor& fd) = delete;
+        // FileDescriptor& operator=(const FileDescriptor& fd) = delete;
+    public:
+        uint32_t readOffset{}, writeOffset{};
+        vfs::Node* fileNode{};
+    public:
+        FileDescriptor() = default;
+        FileDescriptor(vfs::Node* fileNode) : fileNode(fileNode), readOffset(0), writeOffset(0) {}
+
+        bool canReadXbytes(int x);
+
+        int read(uint32_t limit, uint8_t* buffer);
+
+        int write(uint32_t limit, uint8_t* buffer);
+    };
+}
+
 enum class TaskState {
     NOT_STARTED = 0,
     RUNNING = 1,
@@ -18,12 +44,10 @@ enum class TaskState {
 inline bool isRunnableState(TaskState state) {
     return state == TaskState::NOT_STARTED || state == TaskState::RUNNING;
 }
-
 namespace kernel {
     void threadRunWrapper();
 
     class Thread;
-
     struct ExecContext {
         uint64_t rsp = 0; // stack pointer
         uint64_t rip = 0; // instruction pointer
@@ -31,7 +55,7 @@ namespace kernel {
         uint64_t rflags = 514; // duh
 
         ExecContext() = default;
-        ExecContext(uint64_t newRip): rip(newRip) {}
+        ExecContext(uint64_t newRip) : rip(newRip) {}
     };
 
     static constexpr uint64_t stackSize = 64 * 1024;
@@ -58,19 +82,11 @@ namespace kernel {
         TaskState state = TaskState::NOT_STARTED;
         void(*runFunc)(void);
 
+        Vector<FileDescriptor> fileDescriptors;
+
         Thread() = default;
 
-        Thread(void(*func)(void))
-            : runFunc(func) {
-            static uint64_t currId = 1;
-            id = currId++;
-
-            stackMem = makeUnique<StackSpace>();
-            execContext.rip = (uint64_t)&threadRunWrapper;
-            execContext.rsp = (uint64_t)stackMem.get() + stackSize - 4096;
-
-            resetContextSwitchInfo();
-        }
+        Thread(void(*func)(void));
 
         void copyFromISRFrame(const ISRFrame& context) {
             execContext.genRegisters = context.genRegisters;

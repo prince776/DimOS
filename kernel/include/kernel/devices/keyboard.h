@@ -2,6 +2,7 @@
 #include <stdint-gcc.h>
 #include <kernel/isr.h>
 
+// Big part of this copied from BrokenThorn tutorial.
 class Keyboard {
 private:
     Keyboard()
@@ -28,7 +29,7 @@ public:
 
     bool getError() { return error; }
 
-    enum KeyCode: int;
+    enum KeyCode : int;
 
     uint8_t getLastScanCode() { return scancode; }
 
@@ -126,7 +127,7 @@ private:
     };
 
 public:
-    enum KeyCode: int {
+    enum KeyCode : int {
         // Alphanumeric keys ////////////////
 
         KEY_SPACE = ' ',

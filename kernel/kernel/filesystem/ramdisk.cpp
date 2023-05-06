@@ -2,7 +2,7 @@
 
 namespace fs {
 
-    RamDisk::RamDisk(void* base, int deviceID): deviceID(deviceID) {
+    RamDisk::RamDisk(void* base, int deviceID) : deviceID(deviceID) {
         super = (Super*)base;
         nodes = (Node*)(base + sizeof(Super));
         Blk dataBitsetMemBlk = Blk{
@@ -29,6 +29,8 @@ namespace fs {
         uint8_t buffer[BlockSize];
         memset(buffer, 0, BlockSize);
         write(vfsNode.resource, 0, BlockSize, buffer);
+        node.size = 0;
+        vfsNode.resource.size = 0;
     }
 
     void RamDisk::remove(vfs::Node& vfsNode) {
@@ -43,6 +45,10 @@ namespace fs {
 
     int RamDisk::read(const Resource& resource, uint32_t offset, uint32_t size, uint8_t* buffer) const {
         auto* node = getNode(resource.inode);
+        if (offset > node->size) {
+            printf("Can't read from offset > size, inode: %d\n", resource.inode);
+            return 0;
+        }
         // Can't read more than possible.
         size = min(size, node->size - offset);
 
@@ -59,6 +65,10 @@ namespace fs {
     int RamDisk::write(Resource& resource, uint32_t offset, uint32_t size, uint8_t* buffer) {
         auto* node = getNode(resource.inode);
         // Can't write more than possible.
+        if (offset > MaxDataBlocks * BlockSize) {
+            printf("Can't write from offset > max file size, inode: %d\n", resource.inode);
+            return 0;
+        }
         size = min(size, MaxDataBlocks * BlockSize - offset);
         int prevDoneInBlock = offset % BlockSize, bytesWritten = 0;
         for (int i = offset / BlockSize; i < MaxDataBlocks && bytesWritten < size; i++) {

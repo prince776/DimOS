@@ -37,6 +37,12 @@ public:
             data.push_back(val);
         }
         data.push_back('\0');
+        return *this;
+    }
+
+    String& operator+=(char c) {
+        push_back(c);
+        return *this;
     }
 
     String operator+(const String& rhs) const {
@@ -126,3 +132,13 @@ public:
 private:
     Vector<char, Alloc> data;
 };
+
+inline String<> stoi(int n) {
+    String<> res = "";
+    while (n > 0) {
+        res += ('0' + (n % 10));
+        n /= 10;
+    }
+    res.reverse();
+    return res;
+}
