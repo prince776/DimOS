@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-. ./build.sh
+# . ./build.sh
 
 ###### OLD GRUB #####
 # mkdir -p isodir
