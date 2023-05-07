@@ -2,7 +2,7 @@ include(${CMAKE_CURRENT_LIST_DIR}/arch/CMakeLists.txt)
 
 file(GLOB_RECURSE SRC_FILES "kernel/*.cpp")
 
-SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_CXX_FLAGS} \
+SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} \
 -static                     \
 -z max-page-size=0x1000     \
 -nostdlib                   \
@@ -13,7 +13,8 @@ SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_CXX_FLAGS} \
 
 add_executable(kernel ${SRC_FILES} ${ARCH_SRC_FILES})
 
-set_target_properties(kernel PROPERTIES LINK_DEPENDS ${LINKER_SCRIPT})
+message("linker script: ${LINKER_SCRIPT}")
+target_link_options(kernel PRIVATE -T ${LINKER_SCRIPT})
 target_link_libraries(kernel libk)
 
 target_include_directories(kernel PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
