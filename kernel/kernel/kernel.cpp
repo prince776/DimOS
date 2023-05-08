@@ -11,7 +11,7 @@
 #include <kernel/memory/kheap.h>
 #include <kernel/memory/pmm.h>
 #include <kernel/memory/vmm.h>
-#include "kernel/process/kthread.h"
+#include <kernel/process/kthread.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -23,17 +23,15 @@
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
-volatile struct limine_terminal_request terminal_request = {
-    .id = LIMINE_TERMINAL_REQUEST, .revision = 0};
+volatile struct limine_terminal_request terminal_request = {.id = LIMINE_TERMINAL_REQUEST,
+                                                            .revision = 0};
 
-static volatile limine_memmap_request memmap_request = {
-    .id = LIMINE_MEMMAP_REQUEST, .revision = 0};
+static volatile limine_memmap_request memmap_request = {.id = LIMINE_MEMMAP_REQUEST, .revision = 0};
 
 static volatile limine_kernel_address_request kerenel_address_request = {
     .id = LIMINE_KERNEL_ADDRESS_REQUEST, .revision = 0};
 
-static volatile limine_hhdm_request hhdm_request = {.id = LIMINE_HHDM_REQUEST,
-                                                    .revision = 0};
+static volatile limine_hhdm_request hhdm_request = {.id = LIMINE_HHDM_REQUEST, .revision = 0};
 char* limineMemTypeMap[] = {
     "USABLE",
     "RESERVED",
@@ -52,8 +50,7 @@ extern "C" void kernel_early() {
         (*ctor)();
     }
     // Ensure we got a terminal
-    if (terminal_request.response == NULL ||
-        terminal_request.response->terminal_count < 1) {
+    if (terminal_request.response == NULL || terminal_request.response->terminal_count < 1) {
         panic("No terminal found");
     }
 }
@@ -68,17 +65,14 @@ extern "C" void kernel_main(void) {
     auto memArr = memmap_request.response->entries;
     auto memArrLen = memmap_request.response->entry_count;
     PhysicalMemMap physcialMemMap;
-    physcialMemMap.totalSize =
-        memArr[memArrLen - 2]->base + memArr[memArrLen - 2]->length;
-    printf(
-        "Physcial Memory Map: (Total: %x) "
-        "------------------------------------\n",
-        physcialMemMap.totalSize);
+    physcialMemMap.totalSize = memArr[memArrLen - 2]->base + memArr[memArrLen - 2]->length;
+    printf("Physcial Memory Map: (Total: %x) "
+           "------------------------------------\n",
+           physcialMemMap.totalSize);
     for (int i = 0; i < memArrLen; i++) {
         auto memEntry = memArr[i];
-        printf("Memory entry %d: base: %x length: %x type: %s\n", i,
-               memEntry->base, memEntry->length,
-               limineMemTypeMap[memEntry->type]);
+        printf("Memory entry %d: base: %x length: %x type: %s\n", i, memEntry->base,
+               memEntry->length, limineMemTypeMap[memEntry->type]);
         if (memEntry->type == LIMINE_MEMMAP_USABLE) {
             physcialMemMap.availMemArrCnt++;
         }
@@ -103,12 +97,11 @@ extern "C" void kernel_main(void) {
     auto kernelAddr = kerenel_address_request.response;
     auto hhdmRes = hhdm_request.response;
     HHDMOffset = hhdmRes->offset;
-    printf("Kernel Addr-> Physical: %x Virtual: %x\n",
-           kernelAddr->physical_base, kernelAddr->virtual_base);
+    printf("Kernel Addr-> Physical: %x Virtual: %x\n", kernelAddr->physical_base,
+           kernelAddr->virtual_base);
     printf("HHDM offset: %x\n", hhdmRes->offset);
-    printf(
-        "----------------------------------------------------------------------"
-        "--\n");
+    printf("----------------------------------------------------------------------"
+           "--\n");
     // ******************************************************************************//
 
     auto pmmMemRange = PMM::get().init(physcialMemMap);

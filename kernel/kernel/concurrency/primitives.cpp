@@ -3,8 +3,8 @@
 void MutexLock::acquireLock() {
     // we have this because even after coming from park, there's not guarantee flag is free
     // it's like a condition variable, just a signal
-    // reason: this thread was unparked, but then before it could be scheduled a new thread was spawned
-    // which acquired this mutex
+    // reason: this thread was unparked, but then before it could be scheduled a new thread was
+    // spawned which acquired this mutex
     while (true) {
         while (__sync_val_compare_and_swap(&lock, 0, 1) == 1)
             continue;
@@ -12,8 +12,7 @@ void MutexLock::acquireLock() {
             flag = 1;
             lock = 0;
             break;
-        }
-        else {
+        } else {
             queue.push_back(kernel::thisThread().id);
             kernel::setpark(); // Now can't be interrupted till we yield
             lock = 0;
@@ -27,8 +26,7 @@ void MutexLock::releaseLock() {
         continue;
     if (!queue.size()) {
         flag = 0;
-    }
-    else {
+    } else {
         auto next = queue.back();
         queue.pop_back();
         kernel::unpark(kernel::getThread(next));

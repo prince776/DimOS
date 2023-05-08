@@ -27,4 +27,4 @@ struct InterruptFrame {
     uint64_t rsp;
     uint64_t ss;
 };
-}  // namespace cpu
+} // namespace cpu

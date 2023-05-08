@@ -8,7 +8,8 @@
 static bool print(const char* data, size_t length) {
     const unsigned char* bytes = (const unsigned char*)data;
     for (size_t i = 0; i < length; i++)
-        if (putchar(bytes[i]) == EOF) return false;
+        if (putchar(bytes[i]) == EOF)
+            return false;
     return true;
 }
 
@@ -17,11 +18,13 @@ static bool print_decimal(int val) {
     str[12] = 0;
     int pos = 11;
     bool negative = val < 0;
-    if (val < 0) val *= -1;
+    if (val < 0)
+        val *= -1;
     while (pos >= 0) {
         str[pos] = '0' + (val % 10);
         val /= 10;
-        if (val == 0) break;
+        if (val == 0)
+            break;
         pos--;
     }
     if (negative) {
@@ -39,7 +42,8 @@ static bool print_unsigned_decimal(unsigned int val) {
     while (pos >= 0) {
         str[pos] = '0' + (val % 10);
         val /= 10;
-        if (val == 0) break;
+        if (val == 0)
+            break;
         pos--;
     }
     int res = printf(str + pos);
@@ -51,11 +55,13 @@ static bool print_decimal_64(int64_t val) {
     str[21] = 0;
     int pos = 20;
     bool negative = val < 0;
-    if (val < 0) val *= -1;
+    if (val < 0)
+        val *= -1;
     while (pos >= 0) {
         str[pos] = '0' + (val % 10);
         val /= 10;
-        if (val == 0) break;
+        if (val == 0)
+            break;
         pos--;
     }
     if (negative) {
@@ -73,7 +79,8 @@ static bool print_unsigned_decimal_64(uint64_t val) {
     while (pos >= 0) {
         str[pos] = '0' + (val % 10);
         val /= 10;
-        if (val == 0) break;
+        if (val == 0)
+            break;
         pos--;
     }
     int res = printf(str + pos);
@@ -93,7 +100,8 @@ static bool print_hex_64(uint64_t val) {
             str[pos] = 'a' + x;
         }
         val /= 16;
-        if (val == 0) break;
+        if (val == 0)
+            break;
         pos--;
     }
     pos--;
@@ -114,14 +122,17 @@ int printf(const char* restrict format, ...) {
         size_t maxrem = INT_MAX - written;
 
         if (format[0] != '%' || format[1] == '%') {
-            if (format[0] == '%') format++;
+            if (format[0] == '%')
+                format++;
             size_t amount = 1;
-            while (format[amount] && format[amount] != '%') amount++;
+            while (format[amount] && format[amount] != '%')
+                amount++;
             if (maxrem < amount) {
                 // TODO: Set errno to EOVERFLOW.
                 return -1;
             }
-            if (!print(format, amount)) return -1;
+            if (!print(format, amount))
+                return -1;
             format += amount;
             written += amount;
             continue;
@@ -136,7 +147,8 @@ int printf(const char* restrict format, ...) {
                 // TODO: Set errno to EOVERFLOW.
                 return -1;
             }
-            if (!print(&c, sizeof(c))) return -1;
+            if (!print(&c, sizeof(c)))
+                return -1;
             written++;
         } else if (*format == 's') {
             format++;
@@ -146,7 +158,8 @@ int printf(const char* restrict format, ...) {
                 // TODO: Set errno to EOVERFLOW.
                 return -1;
             }
-            if (!print(str, len)) return -1;
+            if (!print(str, len))
+                return -1;
             written += len;
         } else if (*format == 'd') {
             format++;
@@ -155,7 +168,8 @@ int printf(const char* restrict format, ...) {
                 // TODO: Set errno to EOVERFLOW.
                 return -1;
             }
-            if (!print_decimal(d)) return -1;
+            if (!print_decimal(d))
+                return -1;
             written++;
         } else if (*format == 'l') {
             format++;
@@ -164,7 +178,8 @@ int printf(const char* restrict format, ...) {
                 // TODO: Set errno to EOVERFLOW.
                 return -1;
             }
-            if (!print_decimal_64(d)) return -1;
+            if (!print_decimal_64(d))
+                return -1;
             written++;
         } else if (*format == 'u') {
             format++;
@@ -173,7 +188,8 @@ int printf(const char* restrict format, ...) {
                 // TODO: Set errno to EOVERFLOW.
                 return -1;
             }
-            if (!print_unsigned_decimal_64(d)) return -1;
+            if (!print_unsigned_decimal_64(d))
+                return -1;
             written++;
         } else if (*format == 'x') {
             format++;
@@ -182,7 +198,8 @@ int printf(const char* restrict format, ...) {
                 // TODO: Set errno to EOVERFLOW.
                 return -1;
             }
-            if (!print_hex_64(d)) return -1;
+            if (!print_hex_64(d))
+                return -1;
             written++;
         } else {
             format = format_begun_at;
@@ -191,7 +208,8 @@ int printf(const char* restrict format, ...) {
                 // TODO: Set errno to EOVERFLOW.
                 return -1;
             }
-            if (!print(format, len)) return -1;
+            if (!print(format, len))
+                return -1;
             written += len;
             format += len;
         }

@@ -23,8 +23,7 @@ struct IndexOffset {
     // MUST: whenever comparing with HHDM to check if vAddr is in higher half,
     // convert to IndexOffset first.
     inline VirtualAddr getVirtualAddr() const {
-        uint64_t ans =
-            ((i[0] << 39) | (i[1] << 30) | (i[2] << 21) | (i[3] << 12));
+        uint64_t ans = ((i[0] << 39) | (i[1] << 30) | (i[2] << 21) | (i[3] << 12));
         if (ans >= 0x800000000000) {
             ans |= 0xffff000000000000;
         }
@@ -47,17 +46,16 @@ struct IndexOffset {
 };
 
 class VMM {
-   public:
+  public:
     static constexpr int64_t entriesPerTable = Paging::entryCnt;
     static constexpr int64_t pageSize = 4096;
     static constexpr int64_t pageAlignment = 4096;
 
-   private:
+  private:
     Paging::Table* pml4 = nullptr;
-    int64_t availablePagesLH =
-        0;  // with every new table(level:3) added, availablePages +=
-            // entriesPerTable, with every page allocated, availablePages--
-    int64_t availablePagesHH = 0;  // For Higher half
+    int64_t availablePagesLH = 0; // with every new table(level:3) added, availablePages +=
+                                  // entriesPerTable, with every page allocated, availablePages--
+    int64_t availablePagesHH = 0; // For Higher half
 
     enum AllocScheme {
         NO_ALLOC = 0,
@@ -65,12 +63,12 @@ class VMM {
         USE_VMM,
     };
 
-   private:
+  private:
     VMM() {}
     VMM(const VMM&);
     void operator=(const VMM&);
 
-   public:
+  public:
     static VMM& get() {
         static VMM vmm;
         return vmm;
@@ -104,10 +102,7 @@ class VMM {
 
     Paging::Entry* getPTE(const IndexOffset& offsets) {
         auto& i = offsets.i;
-        return &pml4->nextTables[i[0]]
-                    ->nextTables[i[1]]
-                    ->nextTables[i[2]]
-                    ->entries[i[3]];
+        return &pml4->nextTables[i[0]]->nextTables[i[1]]->nextTables[i[2]]->entries[i[3]];
     }
 
     bool switchPML4(Paging::Table* pml4);
@@ -116,20 +111,17 @@ class VMM {
     void freePage(VirtualAddr addr);
     VirtualAddr allocPage(bool higherHalf);
     VirtualAddr allocNPages(bool higherHalf, int n);
-    void assignFrameToPage(Paging::Entry* pte, PhysicalAddr frameAddr,
-                           bool higherHalf);
+    void assignFrameToPage(Paging::Entry* pte, PhysicalAddr frameAddr, bool higherHalf);
 
     inline void invlpg(VirtualAddr addr) {
         // asm volatile("invlpg (%0)" ::"r" (addr) : "memory");
         asm volatile("invlpg (%0)" : : "r"(addr));
     }
 
-   private:
+  private:
     IndexOffset getFirstUnallocPage(IndexOffset begin, AllocScheme allocScheme);
-    IndexOffset getFirstNUnallocPage(IndexOffset begin, AllocScheme allocScheme,
-                                     int n);
-    bool getFirstUnallocPageUtil(IndexOffset& curr, AllocScheme allocScheme,
-                                 Paging::Table* table);
+    IndexOffset getFirstNUnallocPage(IndexOffset begin, AllocScheme allocScheme, int n);
+    bool getFirstUnallocPageUtil(IndexOffset& curr, AllocScheme allocScheme, Paging::Table* table);
     VirtualAddr allocPages(bool higherHalf, bool doMinCheck, int reqPages);
     static constexpr int minAvailablePages = 11;
 

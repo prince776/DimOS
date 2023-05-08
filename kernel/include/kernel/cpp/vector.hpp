@@ -3,13 +3,11 @@
 #include <kernel/cpp/iterator.hpp>
 #include <kernel/cpp/unique-ptr.hpp>
 
-template <typename T, Allocator Alloc = Mallocator>
-class Vector {
-public:
+template <typename T, Allocator Alloc = Mallocator> class Vector {
+  public:
     // Constructors
-    Vector(Alloc allocator = {}): allocator(allocator) {}
-    Vector(size_t size, Alloc allocator = {})
-        : m_size(size), capacity(size), allocator(allocator) {
+    Vector(Alloc allocator = {}) : allocator(allocator) {}
+    Vector(size_t size, Alloc allocator = {}) : m_size(size), capacity(size), allocator(allocator) {
         data = makeUnique<T[], Alloc>(allocator, capacity);
         fill(T{});
     }
@@ -83,9 +81,7 @@ public:
 
     // Iterators
     ForwardIterator<T> begin() noexcept { return ForwardIterator(&data[0]); }
-    ForwardIterator<T> end() noexcept {
-        return ForwardIterator(&data[0] + m_size);
-    }
+    ForwardIterator<T> end() noexcept { return ForwardIterator(&data[0] + m_size); }
     const ForwardIterator<const T> begin() const noexcept { return ForwardIterator(&data[0]); }
     const ForwardIterator<const T> end() const noexcept {
         return ForwardIterator(&data[0] + m_size);
@@ -110,9 +106,7 @@ public:
         }
         return true;
     }
-    bool operator!=(const Vector& other) const noexcept {
-        return !(*this == other);
-    }
+    bool operator!=(const Vector& other) const noexcept { return !(*this == other); }
 
     int find(T c, int begin = 0) const {
         for (int i = begin; i < size(); i++) {
@@ -126,7 +120,8 @@ public:
     // swaps the element to back and calls pop_back().
     // Side effect: changes ordering of elements.
     void fastErase(int pos) {
-        if (pos == npos) return;
+        if (pos == npos)
+            return;
         if (pos != (size() - 1)) {
             swap(this->operator[](pos), this->operator[](size() - 1));
         }
@@ -134,7 +129,8 @@ public:
     }
 
     static const int npos = -1;
-protected:
+
+  protected:
     void fill(const T& val) {
         for (size_t i = 0; i < m_size; i++) {
             data[i] = val;
@@ -158,7 +154,7 @@ protected:
         capacity = newCapacity;
     }
 
-protected:
+  protected:
     UniquePtr<T[], Alloc> data;
     Alloc allocator;
     size_t m_size = 0, capacity = 0;

@@ -1,9 +1,9 @@
 #include <kernel/devices/keyboard.h>
 #include <kernel/devices/pic.h>
-#include <kernel/x64.h>
-#include <stdio.h>
 #include <kernel/filesystem/vfs.h>
 #include <kernel/process/kthread.h>
+#include <kernel/x64.h>
+#include <stdio.h>
 
 extern vfs::VFS globalVFS;
 
@@ -14,9 +14,7 @@ Keyboard::KeyCode Keyboard::getLastKeyCode() {
     return scancodeToKeyCode[scancode];
 }
 
-void Keyboard::discardLastKeyCode() {
-    scancode = INVALID_SCANCODE;
-}
+void Keyboard::discardLastKeyCode() { scancode = INVALID_SCANCODE; }
 
 void Keyboard::install() {
     pic::clearMask(IRQLine);
@@ -24,9 +22,7 @@ void Keyboard::install() {
     registerInterruptHandler(pic::PIC1Offset + IRQLine, Keyboard::isrHandler);
 }
 
-uint8_t Keyboard::readControllerStatus() {
-    return io_inb(ControllerIO::CTRL_STATS_REG);
-}
+uint8_t Keyboard::readControllerStatus() { return io_inb(ControllerIO::CTRL_STATS_REG); }
 
 void Keyboard::sendControllerCommand(uint8_t cmd) {
     while (true) {
@@ -38,9 +34,7 @@ void Keyboard::sendControllerCommand(uint8_t cmd) {
     io_outb(CTRL_CMD_REG, cmd);
 }
 
-uint8_t Keyboard::readEncoderBuffer() {
-    return io_inb(ENC_INPUT_BUF);
-}
+uint8_t Keyboard::readEncoderBuffer() { return io_inb(ENC_INPUT_BUF); }
 
 void Keyboard::sendEncoderCommand(uint8_t cmd) {
     while (true) {
@@ -67,14 +61,13 @@ void Keyboard::isrHandler(ISRFrame* frame) {
         // is this an extended code? If so, set it and return
         if (code == 0xE0 || code == 0xE1) {
             _extended = true;
-        }
-        else {
+        } else {
 
             // either the second byte of an extended scan code or a single byte scan code
             _extended = false;
 
             // test if this is a break code (Original XT Scan Code Set specific)
-            if (code & 0x80) {	// test bit 7
+            if (code & 0x80) { // test bit 7
 
                 // covert the break code into its make code equivelant
                 code -= 0x80;
@@ -100,8 +93,7 @@ void Keyboard::isrHandler(ISRFrame* frame) {
                     device.alt = false;
                     break;
                 }
-            }
-            else {
+            } else {
 
                 // this is a make code - set the scan code
                 device.scancode = code;
@@ -152,8 +144,8 @@ void Keyboard::isrHandler(ISRFrame* frame) {
         }
     }
 
-    // TODO: ok so here we are writing to a file, that is we need concurrency, but acquiring lock in isr
-    // may not work, just a reminder.
+    // TODO: ok so here we are writing to a file, that is we need concurrency, but acquiring lock in
+    // isr may not work, just a reminder.
     auto key = device.getLastKeyCode();
     if (key != KEY_UNKNOWN) {
         auto& stdinFileDescriptor = kernel::thisThread().fileDescriptors[0];
@@ -162,9 +154,7 @@ void Keyboard::isrHandler(ISRFrame* frame) {
     device.discardLastKeyCode();
 }
 
-static bool isascii(char c) {
-    return ((unsigned)(c) <= 0x7F);
-}
+static bool isascii(char c) { return ((unsigned)(c) <= 0x7F); }
 
 char Keyboard::keyCodeToASCII(KeyCode code) {
 

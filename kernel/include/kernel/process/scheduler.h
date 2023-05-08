@@ -2,9 +2,8 @@
 #include <kernel/cpp/vector.hpp>
 #include <kernel/process/kthread.h>
 
-template <typename T>
-class RRScheduler {
-public:
+template <typename T> class RRScheduler {
+  public:
     static RRScheduler<T>& get() {
         static RRScheduler<T> scheduler;
         return scheduler;
@@ -19,14 +18,14 @@ public:
      * @return size_t
      */
     size_t getNext(Vector<T>& tasks, T& prevTask);
-private:
+
+  private:
     RRScheduler() = default;
     RRScheduler(const RRScheduler&);
     void operator=(const RRScheduler&);
 };
 
-template <typename T>
-size_t RRScheduler<T>::getNext(Vector<T>& tasks, T& prevTask) {
+template <typename T> size_t RRScheduler<T>::getNext(Vector<T>& tasks, T& prevTask) {
     size_t prevIndex = tasks.size();
     for (size_t i = 0; i < tasks.size(); i++) {
         if (tasks[i].id == prevTask.id) {

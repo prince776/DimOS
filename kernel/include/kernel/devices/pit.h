@@ -11,4 +11,4 @@ void init(uint16_t divisor);
 
 void stop();
 
-}  // namespace pit
+} // namespace pit

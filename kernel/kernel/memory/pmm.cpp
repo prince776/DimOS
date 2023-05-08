@@ -1,7 +1,7 @@
-#include <kernel/memory/pmm.h>
-#include <string.h>
-#include <stdio.h>
 #include <kernel/common.h>
+#include <kernel/memory/pmm.h>
+#include <stdio.h>
+#include <string.h>
 
 #ifdef PMMLOG
 #define LOG(fmt, ...) printf(fmt, ##__VA_ARGS__)
@@ -79,7 +79,8 @@ void PMM::deinitRegion(PhysicalAddr start, uint64_t size) {
 
 int64_t PMM::firstFreeFrame() {
     for (int64_t i = 0; i < elementCnt(); i++) {
-        if (bitmap[i] == 0xffffffffffffffff) continue;
+        if (bitmap[i] == 0xffffffffffffffff)
+            continue;
         for (int64_t j = 0; j < 64; j++) {
             if (!(bitmap[i] & (1LL << j))) {
                 return i * framesPerElement + j;
@@ -90,17 +91,20 @@ int64_t PMM::firstFreeFrame() {
 }
 
 int64_t PMM::firstNFreeFrames(int64_t n) {
-    if (n > elementCnt()) return -1;
+    if (n > elementCnt())
+        return -1;
     int64_t free = 0, i = 0;
     for (; i < n; i++) {
         free += !bitmapIsSet(i);
     }
     for (; i < elementCnt() * framesPerElement; i++) {
-        if (free == n) return i - n;
+        if (free == n)
+            return i - n;
         free += !bitmapIsSet(i);
         free -= !bitmapIsSet(i - n);
     }
-    if (free == n) return i - n;
+    if (free == n)
+        return i - n;
     return -1;
 }
 
@@ -137,7 +141,8 @@ PhysicalAddr PMM::allocNFrames(int64_t n) {
 void PMM::freeFrame(PhysicalAddr addr) {
     int64_t frame = addr / frameSize;
     LOG("Freeing frame: %l\n", frame);
-    if (!bitmapIsSet(frame)) return;
+    if (!bitmapIsSet(frame))
+        return;
 
     bitmapUnset(frame);
     usedframes--;

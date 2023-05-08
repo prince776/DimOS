@@ -17,23 +17,20 @@ enum class NodeType {
     FILE,
     DIRECTORY,
 };
-}  // namespace vfs
+} // namespace vfs
 
 class FileSystem {
-   public:
+  public:
     virtual void create(vfs::Node& node, vfs::NodeType type) = 0;
     virtual void remove(vfs::Node& node) = 0;
 
     virtual int read(const Resource& resource, uint32_t offset, uint32_t size,
                      uint8_t* buffer) const = 0;
-    virtual int write(Resource& resource, uint32_t offset, uint32_t size,
-                      uint8_t* buffer) = 0;
+    virtual int write(Resource& resource, uint32_t offset, uint32_t size, uint8_t* buffer) = 0;
 
     virtual Vector<vfs::DirEntry> readDir(const vfs::Node& node) const = 0;
-    virtual void writeDir(vfs::Node& node,
-                          const Vector<vfs::DirEntry>& entries) = 0;
-    virtual void removeDirEntry(vfs::Node& node,
-                                const vfs::DirEntry& entry) = 0;
+    virtual void writeDir(vfs::Node& node, const Vector<vfs::DirEntry>& entries) = 0;
+    virtual void removeDirEntry(vfs::Node& node, const vfs::DirEntry& entry) = 0;
 
     virtual void populateVFSNode(vfs::Node& node, int inode) = 0;
 };
@@ -41,7 +38,7 @@ class FileSystem {
 namespace vfs {
 
 class Node {
-   public:
+  public:
     String<> name;
     NodeType type = NodeType::INVALID;
     FileSystem* fileSystem;
@@ -70,12 +67,8 @@ class Node {
     }
 
     Vector<vfs::DirEntry> readDir() { return fileSystem->readDir(*this); }
-    void writeDir(const Vector<DirEntry>& entries) {
-        return fileSystem->writeDir(*this, entries);
-    }
-    void removeDirEntry(const DirEntry& entry) {
-        return fileSystem->removeDirEntry(*this, entry);
-    }
+    void writeDir(const Vector<DirEntry>& entries) { return fileSystem->writeDir(*this, entries); }
+    void removeDirEntry(const DirEntry& entry) { return fileSystem->removeDirEntry(*this, entry); }
 };
 
 struct DirEntry {
@@ -84,8 +77,7 @@ struct DirEntry {
 
     static DirEntry fromStringName(const String<>& name, int inode) {
         if (name.size() > FileNameStrLen) {
-            printf("'%s':Name will be truncated when being saved to Filesystem",
-                   name.c_str());
+            printf("'%s':Name will be truncated when being saved to Filesystem", name.c_str());
         }
         DirEntry result;
         result.inode = inode;
@@ -98,11 +90,11 @@ struct DirEntry {
 } __attribute__((packed));
 
 class VFS {
-   private:
+  private:
     Node* root;
     MutexLock mutex;
 
-   public:
+  public:
     VFS() = default;
     VFS(FileSystem* fs, int inode = 0, const String<>& name = "");
 
@@ -122,20 +114,17 @@ class VFS {
     void rmfile(const String<>& path);
 
     // Read a node data.
-    void read(const String<>& path, uint32_t offset, uint32_t size,
-              uint8_t* buffer);
+    void read(const String<>& path, uint32_t offset, uint32_t size, uint8_t* buffer);
 
     // Write to node.
-    void write(const String<>& path, uint32_t offset, uint32_t size,
-               uint8_t* buffer);
+    void write(const String<>& path, uint32_t offset, uint32_t size, uint8_t* buffer);
 
     // Open a node. For now just returns vfs node to it.
     Node* openNode(const String<>& path);
 
-   private:
+  private:
     Node* resolvePath(const String<>& path);
-    Node* resolvePathUtil(Node* curr, const Vector<String<>>& pathEntries,
-                          int idx);
+    Node* resolvePathUtil(Node* curr, const Vector<String<>>& pathEntries, int idx);
     void addChildren(Node* node);
 };
-}  // namespace vfs
+} // namespace vfs

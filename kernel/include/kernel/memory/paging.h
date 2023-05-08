@@ -33,8 +33,7 @@ enum FlagOffset {
     HUGE_PAGE = 7,
     GLOBAL = 8,
     NO_EXECUTE = 63,
-    TABLE_LEVEL =
-        9,  // Custom flag to figure out what level this table belongs to
+    TABLE_LEVEL = 9, // Custom flag to figure out what level this table belongs to
     TABLE_LEVEL_2 = 10,
 };
 
@@ -47,13 +46,9 @@ struct Entry {
 
     inline void setFlags(uint64_t flags) { data |= flags; }
     inline void removeFlags(uint64_t flags) { data &= (~flags); }
-    inline bool testFlag(FlagOffset flagOffset) const {
-        return ((data >> flagOffset) & 1);
-    }
+    inline bool testFlag(FlagOffset flagOffset) const { return ((data >> flagOffset) & 1); }
 
-    inline PhysicalAddr getPhysicalAddr() const {
-        return data & physicalAddrMask;
-    }
+    inline PhysicalAddr getPhysicalAddr() const { return data & physicalAddrMask; }
     inline void setPhysicalAdr(PhysicalAddr addr) {
         removeFlags(physicalAddrMask);
         data |= (addr & physicalAddrMask);
@@ -95,9 +90,8 @@ struct Table {
     }
 
     inline TableLevel getLevel() const {
-        return (
-            TableLevel)(entries[0].testFlag(TABLE_LEVEL) +
-                        ((TableLevel)entries[0].testFlag(TABLE_LEVEL_2) << 1));
+        return (TableLevel)(entries[0].testFlag(TABLE_LEVEL) +
+                            ((TableLevel)entries[0].testFlag(TABLE_LEVEL_2) << 1));
     }
 
     inline void setLevel(TableLevel level) {
@@ -105,4 +99,4 @@ struct Table {
         entries[0].setFlags(level << TABLE_LEVEL);
     }
 };
-};  // namespace Paging
+}; // namespace Paging

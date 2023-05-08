@@ -1,5 +1,5 @@
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 void demo_stack_smashing(const char* str) {
     char buffer[16];

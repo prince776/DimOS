@@ -1,17 +1,16 @@
 #pragma once
+#include <kernel/cpp/allocator.hpp>
 #include <kernel/cpp/type-traits.hpp>
 #include <kernel/cpp/utility.hpp>
-#include <kernel/cpp/allocator.hpp>
 
-template <typename T, Allocator Alloc = Mallocator>
-class UniquePtr {
-public:
+template <typename T, Allocator Alloc = Mallocator> class UniquePtr {
+  public:
     UniquePtr() = default;
-    UniquePtr(T* ptr, Alloc& alloc): allocator(alloc) {
-        data = Blk{ .ptr = (void*)ptr, .size = sizeof(T) };
+    UniquePtr(T* ptr, Alloc& alloc) : allocator(alloc) {
+        data = Blk{.ptr = (void*)ptr, .size = sizeof(T)};
     }
     explicit UniquePtr(T* ptr) {
-        data = Blk{ .ptr = (void*)ptr, .size = sizeof(T) };
+        data = Blk{.ptr = (void*)ptr, .size = sizeof(T)};
         allocator = Alloc{};
     }
 
@@ -39,7 +38,7 @@ public:
         data.ptr = newPtr;
         if (oldPtr) {
             oldPtr->~T();
-            allocator.deallocate(Blk{ oldPtr, sizeof(T) });
+            allocator.deallocate(Blk{oldPtr, sizeof(T)});
         }
     }
 
@@ -51,30 +50,29 @@ public:
         return *get();
     }
 
-    T* operator->()  noexcept { return get(); }
-    T& operator*()  noexcept {
+    T* operator->() noexcept { return get(); }
+    T& operator*() noexcept {
         assert(data.ptr != nullptr);
         return *get();
     }
 
     T* get() const noexcept { return (T*)data.ptr; }
 
-private:
+  private:
     Blk data;
     Alloc allocator;
 };
 
-template <typename T, Allocator Alloc>
-class UniquePtr<T[], Alloc> {
-public:
+template <typename T, Allocator Alloc> class UniquePtr<T[], Alloc> {
+  public:
     UniquePtr() = default;
-    UniquePtr(Blk blk, Alloc& alloc): data(blk), allocator(alloc) {}
-    explicit UniquePtr(Blk blk): data(blk), allocator(Alloc{}) {}
+    UniquePtr(Blk blk, Alloc& alloc) : data(blk), allocator(alloc) {}
+    explicit UniquePtr(Blk blk) : data(blk), allocator(Alloc{}) {}
 
     ~UniquePtr() { reset(); }
 
     // Move operations
-    UniquePtr(UniquePtr&& rhs): data(rhs.release()) {}
+    UniquePtr(UniquePtr&& rhs) : data(rhs.release()) {}
     UniquePtr& operator=(UniquePtr&& rhs) {
         reset(rhs.release());
         return *this;
@@ -111,7 +109,7 @@ public:
     const T* get() const noexcept { return (T*)data.ptr; }
     T* get() noexcept { return (T*)data.ptr; }
 
-private:
+  private:
     Blk data;
     Alloc allocator;
 };
@@ -155,4 +153,3 @@ auto makeUnique(Alloc allocator, size_t num) {
     }
     return UniquePtr<T, Alloc>(blk, allocator);
 }
-

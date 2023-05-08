@@ -21,15 +21,15 @@ GDTPtr gdtPtr;
 GDTEntry gdtEntries[9];
 
 static void init_gdt() {
-    gdtEntries[0] = {0, 0, 0, 0, 0, 0};             // null
-    gdtEntries[1] = {0xffff, 0, 0, 0x9a, 0x80, 0};  // 16-bit code
-    gdtEntries[2] = {0xffff, 0, 0, 0x92, 0x80, 0};  // 16-bit data
-    gdtEntries[3] = {0xffff, 0, 0, 0x9a, 0xcf, 0};  // 32-bit code
-    gdtEntries[4] = {0xffff, 0, 0, 0x92, 0xcf, 0};  // 32-bit data
-    gdtEntries[5] = {0, 0, 0, 0x9a, 0xa2, 0};       // 64-bit code
-    gdtEntries[6] = {0, 0, 0, 0x92, 0xa0, 0};       // 64-bit data
-    gdtEntries[7] = {0, 0, 0, 0xF2, 0, 0};          // user data
-    gdtEntries[8] = {0, 0, 0, 0xFA, 0x20, 0};       // user code
+    gdtEntries[0] = {0, 0, 0, 0, 0, 0};            // null
+    gdtEntries[1] = {0xffff, 0, 0, 0x9a, 0x80, 0}; // 16-bit code
+    gdtEntries[2] = {0xffff, 0, 0, 0x92, 0x80, 0}; // 16-bit data
+    gdtEntries[3] = {0xffff, 0, 0, 0x9a, 0xcf, 0}; // 32-bit code
+    gdtEntries[4] = {0xffff, 0, 0, 0x92, 0xcf, 0}; // 32-bit data
+    gdtEntries[5] = {0, 0, 0, 0x9a, 0xa2, 0};      // 64-bit code
+    gdtEntries[6] = {0, 0, 0, 0x92, 0xa0, 0};      // 64-bit data
+    gdtEntries[7] = {0, 0, 0, 0xF2, 0, 0};         // user data
+    gdtEntries[8] = {0, 0, 0, 0xFA, 0x20, 0};      // user code
 
     gdtPtr.limit = sizeof(GDTEntry) * 9 - 1;
     gdtPtr.base = (uint64_t)&gdtEntries;
@@ -53,13 +53,13 @@ static void init_idt() {
 
     for (uint8_t vector = 0; vector < 32; vector++) {
         idt_set_descriptor(vector, isr_stub_table[vector],
-                           0x8E);  // This flag means, 64 bit interrupt gate(not
-                                   // trap) + present
+                           0x8E); // This flag means, 64 bit interrupt gate(not
+                                  // trap) + present
         // this means interrupts will be disabled in these ISRs
     }
     pic::remap();
     for (uint8_t vector = pic::PIC1Offset; vector < pic::PIC2End;
-         vector++) {  // Set ISRs for remapped PIC Interrupts
+         vector++) { // Set ISRs for remapped PIC Interrupts
         idt_set_descriptor(vector, isr_stub_table[vector], 0x8E);
     }
 

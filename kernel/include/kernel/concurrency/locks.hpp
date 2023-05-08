@@ -3,11 +3,8 @@
 
 class ScopedLock {
     MutexLock& lock;
-public:
-    ScopedLock(MutexLock& lock) : lock(lock) {
-        lock.acquireLock();
-    }
-    ~ScopedLock() {
-        lock.releaseLock();
-    }
+
+  public:
+    ScopedLock(MutexLock& lock) : lock(lock) { lock.acquireLock(); }
+    ~ScopedLock() { lock.releaseLock(); }
 };

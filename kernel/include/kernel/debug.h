@@ -1,12 +1,11 @@
 #pragma once
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
-#include <stddef.h>
 #include <kernel/limine.h>
+#include <stddef.h>
 
-    void limineDebug(const char*, int len);
+void limineDebug(const char*, int len);
 
 #ifdef __cplusplus
 }

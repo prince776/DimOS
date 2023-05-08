@@ -1,14 +1,13 @@
 #pragma once
 #include <string.h>
 
+#include <kernel/cpp/allocator.hpp>
 #include <kernel/cpp/iterator.hpp>
 #include <kernel/cpp/unique-ptr.hpp>
 #include <kernel/cpp/vector.hpp>
-#include <kernel/cpp/allocator.hpp>
 
-template <Allocator Alloc = Mallocator>
-class String {
-public:
+template <Allocator Alloc = Mallocator> class String {
+  public:
     String() = default;
     String(size_t size, Alloc allocator = {}) {
         data = Vector<char, Alloc>(size + 1, allocator);
@@ -66,9 +65,7 @@ public:
 
     // Iterators
     ForwardIterator<char> begin() noexcept { return ForwardIterator(&data[0]); }
-    ForwardIterator<char> end() noexcept {
-        return ForwardIterator(&data[0] + size());
-    }
+    ForwardIterator<char> end() noexcept { return ForwardIterator(&data[0] + size()); }
     const ForwardIterator<const char> begin() const noexcept { return ForwardIterator(&data[0]); }
     const ForwardIterator<const char> end() const noexcept {
         return ForwardIterator(&data[0] + size());
@@ -82,13 +79,9 @@ public:
         return (*this)[idx];
     }
 
-    bool operator==(const String& other) const noexcept {
-        return data == other.data;
-    }
+    bool operator==(const String& other) const noexcept { return data == other.data; }
 
-    bool operator!=(const String& other) const noexcept {
-        return !(*this == other);
-    }
+    bool operator!=(const String& other) const noexcept { return !(*this == other); }
 
     String substr(int offset, size_t size) const {
         String res(size);
@@ -129,7 +122,8 @@ public:
         }
     }
     static const int npos = -1;
-private:
+
+  private:
     Vector<char, Alloc> data;
 };
 

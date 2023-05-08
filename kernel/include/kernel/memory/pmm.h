@@ -20,7 +20,7 @@ struct PhysicalMemMap {
 };
 
 class PMM {
-   public:
+  public:
     static constexpr int64_t framesPerByte = 8;
     static constexpr int64_t framesPerElement = 64;
     static constexpr int64_t elementSize = 8;
@@ -31,7 +31,7 @@ class PMM {
     int64_t usedframes, frameCnt;
     uint64_t* bitmap;
 
-   private:
+  private:
     PMM() {
         memorySize = usedframes = frameCnt = 0;
         bitmap = nullptr;
@@ -39,7 +39,7 @@ class PMM {
     PMM(const PMM&);
     void operator=(const PMM&);
 
-   public:
+  public:
     static PMM& get() {
         static PMM pmm;
         return pmm;
@@ -58,8 +58,7 @@ class PMM {
     }
 
     inline bool bitmapIsSet(int64_t bit) {
-        return bitmap[bit / framesPerElement] &
-               (1LL << (bit % framesPerElement));
+        return bitmap[bit / framesPerElement] & (1LL << (bit % framesPerElement));
     }
 
     inline int64_t elementCnt() {
@@ -68,9 +67,7 @@ class PMM {
 
     inline PhysicalAddr getFrameAddr(int64_t frame) { return (frame << 12); }
 
-    inline PhysicalAddr endMemory() {
-        return (PhysicalAddr)bitmap + elementCnt();
-    }
+    inline PhysicalAddr endMemory() { return (PhysicalAddr)bitmap + elementCnt(); }
     int64_t firstFreeFrame();
     int64_t firstNFreeFrames(int64_t n);
 

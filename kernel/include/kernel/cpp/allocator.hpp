@@ -23,18 +23,16 @@ concept Allocator = requires(Alloc alloc, size_t size) {
                         { alloc.owns(Blk{nullptr, size}) } -> same_as<bool>;
                     };
 
-template <Allocator alloc>
-class AllocatorTester {};
+template <Allocator alloc> class AllocatorTester {};
 class MockAllocator {
-   public:
+  public:
     Blk allocate(size_t) { return Blk{}; }
     void deallocate(const Blk&) {}
     bool owns(const Blk&) { return false; }
 };
 
-template <Allocator P, Allocator F>
-class FallbackAllocator {
-   public:
+template <Allocator P, Allocator F> class FallbackAllocator {
+  public:
     FallbackAllocator(const P& primary, const F& fallback)
         : primaryAlloc(primary), fallbackAlloc(fallback) {}
 
@@ -54,17 +52,14 @@ class FallbackAllocator {
         }
     }
 
-    bool owns(const Blk& blk) {
-        return primaryAlloc.owns(blk) || fallbackAlloc.owns(blk);
-    }
+    bool owns(const Blk& blk) { return primaryAlloc.owns(blk) || fallbackAlloc.owns(blk); }
 
-   private:
+  private:
     P primaryAlloc;
     F fallbackAlloc;
 };
 
-using FallbackAllocatorTest =
-    AllocatorTester<FallbackAllocator<MockAllocator, MockAllocator>>;
+using FallbackAllocatorTest = AllocatorTester<FallbackAllocator<MockAllocator, MockAllocator>>;
 
 // Unaligned allocator for now.
 // template <size_t MaxSize> class StackAllocator {
@@ -107,7 +102,7 @@ using FallbackAllocatorTest =
 
 // Unaligned allocator for now.
 class Mallocator {
-   public:
+  public:
     Mallocator() = default;
 
     Blk allocate(size_t size) { return Blk{malloc(size), size}; }

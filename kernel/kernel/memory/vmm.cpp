@@ -1,12 +1,13 @@
-#include <kernel/memory/vmm.h>
-#include <kernel/memory/paging.h>
 #include <kernel/common.h>
 #include <kernel/isr.h>
+#include <kernel/memory/paging.h>
+#include <kernel/memory/vmm.h>
 
 extern uint64_t HHDMOffset;
 extern "C" void loadPageDirectory(uint64_t);
 
-void VMM::init(const PhysicalMemMap& physicalMemMap, const MemRange* otherRanges, uint64_t otherRangesLen) {
+void VMM::init(const PhysicalMemMap& physicalMemMap, const MemRange* otherRanges,
+               uint64_t otherRangesLen) {
     auto& pmm = PMM::get();
 
     PhysicalAddr pml4PAddr = pmm.allocNFrames(2);
@@ -20,7 +21,8 @@ void VMM::init(const PhysicalMemMap& physicalMemMap, const MemRange* otherRanges
     {
         IndexOffset kernelIdxOffset(getIndexOffset(0xffffffff80000000));
         auto& i = kernelIdxOffset.i;
-        for (auto st = physicalMemMap.kernelStart; st < physicalMemMap.kernelStart + physicalMemMap.kernelSize; st += pageSize) {
+        for (auto st = physicalMemMap.kernelStart;
+             st < physicalMemMap.kernelStart + physicalMemMap.kernelSize; st += pageSize) {
             kernelIdxOffset = getFirstUnallocPage(kernelIdxOffset, USE_PMM);
             auto* pte = getPTE(kernelIdxOffset);
             assignFrameToPage(pte, st, true);
@@ -33,10 +35,13 @@ void VMM::init(const PhysicalMemMap& physicalMemMap, const MemRange* otherRanges
     {
         auto setHHDMandIdentityPTE = [&](const MemRange& curr) {
             if (curr.size >= pageSize) {
-                printf("[VMM] Mapping Physical range: %x, %x\n", curr.start, curr.start + curr.size);
-                for (auto currSt = curr.start; currSt < curr.start + curr.size; currSt += pageSize) {
+                printf("[VMM] Mapping Physical range: %x, %x\n", curr.start,
+                       curr.start + curr.size);
+                for (auto currSt = curr.start; currSt < curr.start + curr.size;
+                     currSt += pageSize) {
                     auto identityIndexOffset = getFirstUnallocPage(getIndexOffset(currSt), USE_PMM);
-                    auto hhdmIndexOffset = getFirstUnallocPage(getIndexOffset(currSt + HHDMOffset), USE_PMM);
+                    auto hhdmIndexOffset =
+                        getFirstUnallocPage(getIndexOffset(currSt + HHDMOffset), USE_PMM);
 
                     auto* pte = getPTE(hhdmIndexOffset);
                     assignFrameToPage(pte, currSt, true);
@@ -49,11 +54,11 @@ void VMM::init(const PhysicalMemMap& physicalMemMap, const MemRange* otherRanges
         uint64_t st = 0;
         for (int i = 0; i < physicalMemMap.availMemArrCnt; i++) {
             auto& memEntry = physicalMemMap.availableMemArr[i];
-            MemRange curr = { st, memEntry.start - st };
+            MemRange curr = {st, memEntry.start - st};
             setHHDMandIdentityPTE(curr);
             st = memEntry.start + memEntry.size;
         }
-        MemRange curr = { st, physicalMemMap.totalSize - st };
+        MemRange curr = {st, physicalMemMap.totalSize - st};
         setHHDMandIdentityPTE(curr);
 
         // Map the other ranges as well
@@ -69,7 +74,8 @@ void VMM::init(const PhysicalMemMap& physicalMemMap, const MemRange* otherRanges
         getFirstNUnallocPage(IndexOffset(256, 0, 0, 0), USE_PMM, minAvailablePages);
     }
 
-    printf("[VMM] Initialization finished with available pages-> HH: %l, LH: %l\n", availablePagesHH, availablePagesLH);
+    printf("[VMM] Initialization finished with available pages-> HH: %l, LH: %l\n",
+           availablePagesHH, availablePagesLH);
     switchPML4(pml4);
     registerInterruptHandler(14, pageFaultHanlder);
 }
@@ -85,17 +91,15 @@ bool VMM::switchPML4(Paging::Table* pml4) {
 void VMM::assignFrameToPage(Paging::Entry* pte, PhysicalAddr frameAddr, bool higherHalf) {
     pte->setPhysicalAdr(frameAddr);
     pte->setFlags((1LL << Paging::PRESENT_FLAG) | (1LL << Paging::WRITABLE));
-    if (higherHalf) availablePagesHH--;
-    else availablePagesLH--;
+    if (higherHalf)
+        availablePagesHH--;
+    else
+        availablePagesLH--;
 }
 
-VirtualAddr VMM::allocPage(bool higherHalf) {
-    return allocPages(higherHalf, true, 1);
-}
+VirtualAddr VMM::allocPage(bool higherHalf) { return allocPages(higherHalf, true, 1); }
 
-VirtualAddr VMM::allocNPages(bool higherHalf, int n) {
-    return allocPages(higherHalf, true, n);
-}
+VirtualAddr VMM::allocNPages(bool higherHalf, int n) { return allocPages(higherHalf, true, n); }
 
 void VMM::freePage(VirtualAddr addr) {
     IndexOffset idxOffset = getIndexOffset(addr);
@@ -105,8 +109,10 @@ void VMM::freePage(VirtualAddr addr) {
     *pte = Paging::defaultEntry;
 
     bool higherHalf = idxOffset.getVirtualAddr() >= HHDMOffset;
-    if (higherHalf) availablePagesHH++;
-    else availablePagesLH++;
+    if (higherHalf)
+        availablePagesHH++;
+    else
+        availablePagesLH++;
     invlpg(addr);
 }
 
@@ -129,8 +135,7 @@ IndexOffset VMM::getFirstNUnallocPage(IndexOffset begin, VMM::AllocScheme allocS
         if (prev.nextPage().getVirtualAddr() == next.getVirtualAddr()) {
             done++;
             prev = next;
-        }
-        else { // didn't get a continuous area, restart
+        } else { // didn't get a continuous area, restart
             res = next;
             prev = next;
             done = 1;
@@ -139,7 +144,8 @@ IndexOffset VMM::getFirstNUnallocPage(IndexOffset begin, VMM::AllocScheme allocS
     return res;
 }
 
-bool VMM::getFirstUnallocPageUtil(IndexOffset& curr, VMM::AllocScheme allocScheme, Paging::Table* table) {
+bool VMM::getFirstUnallocPageUtil(IndexOffset& curr, VMM::AllocScheme allocScheme,
+                                  Paging::Table* table) {
     auto original = curr;
     bool done = false;
     auto level = table->getLevel();
@@ -157,8 +163,7 @@ bool VMM::getFirstUnallocPageUtil(IndexOffset& curr, VMM::AllocScheme allocSchem
                 curr.i[level] = i;
                 done = true;
             }
-        }
-        else {
+        } else {
             if (!table->entries[i].isPresent()) {
                 if (allocScheme == NO_ALLOC) {
                     continue;
@@ -166,20 +171,27 @@ bool VMM::getFirstUnallocPageUtil(IndexOffset& curr, VMM::AllocScheme allocSchem
                 Paging::Table* nextTable;
                 PhysicalAddr paddr;
                 if (allocScheme == USE_PMM) {
-                    // TODO: Don't really need to allocate 2 frames for the last level, since nextTable array won't ever be used by it.
+                    // TODO: Don't really need to allocate 2 frames for the last level, since
+                    // nextTable array won't ever be used by it.
                     paddr = PMM::get().allocNFrames(2);
                     physicalMemUsage.size += PMM::frameSize * 2;
 
-                    nextTable = (Paging::Table*)(paddr + HHDMOffset); // This calc only really works while Limine pages are loaded, hence using PMM
-                    // Hence this depends on the fact that the memory being used here will be covered by the paging tables manually
-                }
-                else if (allocScheme == USE_VMM) { // TODO :::: Can we just calling alloc? We need the paddr tho
+                    nextTable =
+                        (Paging::Table*)(paddr +
+                                         HHDMOffset); // This calc only really works while Limine
+                                                      // pages are loaded, hence using PMM
+                    // Hence this depends on the fact that the memory being used here will be
+                    // covered by the paging tables manually
+                } else if (allocScheme ==
+                           USE_VMM) { // TODO :::: Can we just calling alloc? We need the paddr tho
                     paddr = PMM::get().allocNFrames(2);
                     physicalMemUsage.size += PMM::frameSize * 2;
 
-                    // This depends on guarantee that there are enough avilable pages, which should work as long as there are enough after VMM::init()
-                    // search for pages to use for VMM memory in HH only
-                    IndexOffset firstPageOffset = getFirstNUnallocPage(IndexOffset(256, 0, 0, 0), NO_ALLOC, 2);
+                    // This depends on guarantee that there are enough avilable pages, which should
+                    // work as long as there are enough after VMM::init() search for pages to use
+                    // for VMM memory in HH only
+                    IndexOffset firstPageOffset =
+                        getFirstNUnallocPage(IndexOffset(256, 0, 0, 0), NO_ALLOC, 2);
                     nextTable = (Paging::Table*)firstPageOffset.getVirtualAddr();
 
                     // Set the PTEntries
@@ -194,16 +206,18 @@ bool VMM::getFirstUnallocPageUtil(IndexOffset& curr, VMM::AllocScheme allocSchem
                     availablePagesHH -= 2;
                 }
                 nextTable->init((Paging::TableLevel)(level + 1));
-                table->entries[i].setFlags((1LL << Paging::PRESENT_FLAG) | (1LL << Paging::WRITABLE));
+                table->entries[i].setFlags((1LL << Paging::PRESENT_FLAG) |
+                                           (1LL << Paging::WRITABLE));
                 table->entries[i].setPhysicalAdr(paddr);
                 table->nextTables[i] = nextTable;
 
                 if (nextTable->getLevel() == Paging::LEVEL3) { // we create a new Table of LEVEL3
                     bool higherHalf = original.getVirtualAddr() >= HHDMOffset;
-                    if (higherHalf) availablePagesHH += entriesPerTable;
-                    else availablePagesLH += entriesPerTable;
+                    if (higherHalf)
+                        availablePagesHH += entriesPerTable;
+                    else
+                        availablePagesLH += entriesPerTable;
                 }
-
             }
             done = getFirstUnallocPageUtil(curr, allocScheme, table->nextTables[i]);
             if (done) {
