@@ -2,8 +2,8 @@
 // Probably shouldn't be here, because registers are arch specefic
 // when x86_64 would be added, this should be improved
 #pragma once
-#include <stdint-gcc.h>
 #include <kernel/cpu.h>
+#include <stdint.h>
 
 struct ISRFrame {
     cpu::GenRegisters genRegisters;

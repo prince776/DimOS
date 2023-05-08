@@ -1,9 +1,11 @@
 #pragma once
-#include <kernel/cpp/vector.hpp>
-#include <stdint-gcc.h>
+#include <stdint.h>
 
-template <Allocator Alloc = Mallocator> class Bitset {
-public:
+#include <kernel/cpp/vector.hpp>
+
+template <Allocator Alloc = Mallocator>
+class Bitset {
+   public:
     static constexpr int BlockSize = 64;
     static constexpr uint64_t BlockMask = ~(0ULL);
 
@@ -11,7 +13,7 @@ public:
         Bitset& ref;
         int idx{}, offset{};
 
-    public:
+       public:
         BitProxy(Bitset& ref, int idx, int offset)
             : ref(ref), idx(idx), offset(offset) {}
         operator bool() const noexcept {
@@ -46,7 +48,7 @@ public:
         }
     }
 
-private:
+   private:
     Vector<uint64_t, Alloc> data;
     int len;
 };

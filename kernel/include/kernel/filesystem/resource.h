@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint-gcc.h>
+#include <stdint.h>
 
 struct Resource;
 
@@ -8,5 +8,3 @@ struct Resource {
     int32_t size{};
     int32_t deviceID{};
 };
-
-

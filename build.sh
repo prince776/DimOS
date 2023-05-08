@@ -4,7 +4,7 @@ set -e
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 DEFAULT_SYSROOT="${SCRIPT_DIR}/sysroot"
-export SYSROOT=${SYSROOT:-DEFAULT_SYSROOT}
+export SYSROOT=${SYSROOT:-${DEFAULT_SYSROOT}}
 
 TOOLCHAIN="${SCRIPT_DIR}/x86_64-elf-toolchain.cmake"
 

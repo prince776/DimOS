@@ -1,6 +1,6 @@
 #pragma once
+#include <stdint.h>
 #include <stdio.h>
-#include <stdint-gcc.h>
 
 using PhysicalAddr = uint64_t;
 
@@ -19,9 +19,8 @@ struct PhysicalMemMap {
     uint64_t kernelStart, kernelSize;
 };
 
-
 class PMM {
-public:
+   public:
     static constexpr int64_t framesPerByte = 8;
     static constexpr int64_t framesPerElement = 64;
     static constexpr int64_t elementSize = 8;
@@ -32,11 +31,15 @@ public:
     int64_t usedframes, frameCnt;
     uint64_t* bitmap;
 
-private:
-    PMM() { memorySize = usedframes = frameCnt = 0; bitmap = nullptr; }
+   private:
+    PMM() {
+        memorySize = usedframes = frameCnt = 0;
+        bitmap = nullptr;
+    }
     PMM(const PMM&);
     void operator=(const PMM&);
-public:
+
+   public:
     static PMM& get() {
         static PMM pmm;
         return pmm;
@@ -55,7 +58,8 @@ public:
     }
 
     inline bool bitmapIsSet(int64_t bit) {
-        return bitmap[bit / framesPerElement] & (1LL << (bit % framesPerElement));
+        return bitmap[bit / framesPerElement] &
+               (1LL << (bit % framesPerElement));
     }
 
     inline int64_t elementCnt() {
@@ -64,7 +68,9 @@ public:
 
     inline PhysicalAddr getFrameAddr(int64_t frame) { return (frame << 12); }
 
-    inline PhysicalAddr endMemory() { return (PhysicalAddr)bitmap + elementCnt(); }
+    inline PhysicalAddr endMemory() {
+        return (PhysicalAddr)bitmap + elementCnt();
+    }
     int64_t firstFreeFrame();
     int64_t firstNFreeFrames(int64_t n);
 

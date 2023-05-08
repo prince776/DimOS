@@ -4,3 +4,8 @@ sysroot
 *.log
 .DS_Store
 build/
+.cache/
+cmake-build-debug/
+*.iml
+*.xml
+.idea

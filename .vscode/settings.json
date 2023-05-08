@@ -5,5 +5,6 @@
   "lldb.displayFormat": "hex",
   "lldb.dereferencePointers": true,
   "lldb.consoleMode": "commands",
-  "lldb.showDisassembly": "auto"
+  "lldb.showDisassembly": "auto",
+  "C_Cpp.intelliSenseEngine": "disabled"
 }
