@@ -3,10 +3,13 @@ cmake_minimum_required(VERSION 3.0.0)
 project(
   DimOS
   VERSION 0.1.0
-  LANGUAGES CXX C ASM)
+  LANGUAGES CXX C ASM
+)
 
 include(CTest)
 enable_testing()
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(INSTALL_DIR $ENV{SYSROOT})
 
@@ -43,16 +46,6 @@ set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} \
 ")
 
 SET(CMAKE_ASM_FLAGS "${CFLAGS} -x assembler-with-cpp")
-
-# SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} \
-# -static                     \
-# -z max-page-size=0x1000     \
-# -nostdlib                   \
-# -lgcc                       \
-# -nodefaultlibs              \
-# -m elf_x86_64               \
-# -no-pie                     \
-# ")
 
 add_subdirectory(${CMAKE_SOURCE_DIR}/libc)
 add_subdirectory(${CMAKE_SOURCE_DIR}/kernel)

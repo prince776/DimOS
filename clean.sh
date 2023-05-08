@@ -1,11 +1,9 @@
 #!/bin/sh
 set -e
-. ./config.sh
 
-for PROJECT in $PROJECTS; do
-  (cd $PROJECT && $MAKE clean)
-done
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-rm -rf sysroot
-rm -rf isodir
-rm -rf dimos.iso
+rm -f dimos.iso
+rm -rf ${SCRIPT_DIR}/build
+rm -rf ${SCRIPT_DIR}/isodir
+rm -rf ${SCRIPT_DIR}/sysroot
