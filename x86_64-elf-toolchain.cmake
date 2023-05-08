@@ -4,6 +4,7 @@ set(CMAKE_SYSTEM_NAME "Generic")
 # set c and c++ compilers
 set(CMAKE_C_COMPILER x86_64-elf-gcc)
 set(CMAKE_CXX_COMPILER x86_64-elf-g++)
+
 set(CMAKE_C_COMPILER_WORKS 1)
 set(CMAKE_CXX_COMPILER_WORKS 1)
 

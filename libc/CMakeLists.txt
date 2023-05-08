@@ -5,11 +5,11 @@
 file(GLOB_RECURSE SRC_FILES "*.c")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} \
--D__is_libc         \
+-D__is_libk         \
 ")
 
 add_library(libk STATIC ${SRC_FILES})
-target_include_directories(libk PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
+# target_include_directories(libk PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 add_dependencies(libk install_libc_headers install_kernel_headers)
 
