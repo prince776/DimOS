@@ -41,6 +41,35 @@ Node* VFS::mkdir(const String<>& path) {
     return dirNode;
 }
 
+Node* VFS::mnt(const String<>& path, FileSystem* fs, int inode) {
+    ScopedLock lock(mutex);
+
+    auto node = openNode(path);
+    if (node) {
+        printf("Node already exists, can't mount here: '%s'\n", path.c_str());
+        return nullptr;
+    }
+
+    auto parentPath = path;
+    String dirName = "";
+    while (parentPath.back() != '/') {
+        dirName.push_back(parentPath.back());
+        parentPath.pop_back();
+    }
+    dirName.reverse();
+    Node* parentNode = resolvePath(parentPath);
+    if (!parentNode) {
+        printf("Parent node not found: '%s'\n", parentPath.c_str());
+        return nullptr;
+    }
+
+    Node* dirNode = new Node(fs);
+    dirNode->populate(fs, dirName, inode);
+    dirNode->parent = parentNode;
+    parentNode->children.push_back(dirNode);
+    return dirNode;
+}
+
 Node* VFS::mkfile(const String<>& path) {
     ScopedLock lock(mutex);
     auto parentPath = path;

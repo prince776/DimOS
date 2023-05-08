@@ -32,6 +32,9 @@ static volatile limine_kernel_address_request kerenel_address_request = {
     .id = LIMINE_KERNEL_ADDRESS_REQUEST, .revision = 0};
 
 static volatile limine_hhdm_request hhdm_request = {.id = LIMINE_HHDM_REQUEST, .revision = 0};
+static volatile limine_framebuffer_request framebuffer_request = {.id = LIMINE_FRAMEBUFFER_REQUEST,
+                                                                  .revision = 0};
+
 char* limineMemTypeMap[] = {
     "USABLE",
     "RESERVED",
@@ -123,6 +126,15 @@ extern "C" void kernel_main(void) {
     kthreads.push_back(kernel::Thread(0));
     kthreads[0].state = TaskState::COMPLETED;
 
+    auto fbr = framebuffer_request.response;
+    if (fbr == NULL || fbr->framebuffer_count < 1) {
+        printf("fb is null or count is 0");
+    }
+    limine_framebuffer* fb = fbr->framebuffers[0];
+    for (size_t i = 0; i < 100; i++) {
+        uint32_t* fb_ptr = (uint32_t*)fb->address;
+        fb_ptr[i * (fb->pitch / 4) + i] = 0xff0000;
+    }
     auto terminal = demo::Terminal("prince");
 
     // terminal.cd("proc");

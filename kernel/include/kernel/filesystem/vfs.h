@@ -122,6 +122,9 @@ class VFS {
     // Open a node. For now just returns vfs node to it.
     Node* openNode(const String<>& path);
 
+    // Mount a different filesystem at a new path. Parent paths should be present.
+    Node* mnt(const String<>& path, FileSystem* fs, int inode = 0);
+
   private:
     Node* resolvePath(const String<>& path);
     Node* resolvePathUtil(Node* curr, const Vector<String<>>& pathEntries, int idx);
