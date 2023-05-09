@@ -7,7 +7,7 @@
 #include <kernel/cpp/unique-ptr.hpp>
 
 namespace vfs {
-struct Node;
+class Node;
 struct DirEntry;
 constexpr int FileNameStrLen = 16;
 using FileNameStr = char[FileNameStrLen];
