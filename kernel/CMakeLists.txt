@@ -1,8 +1,9 @@
 include(${CMAKE_CURRENT_LIST_DIR}/arch/CMakeLists.txt)
 
 file(GLOB_RECURSE SRC_FILES "kernel/*.cpp")
+file(GLOB_RECURSE HEADER_FILES "{CMAKE_CURRENT_LIST_DIR}/kernel/*.h" "${CMAKE_CURRENT_LIST_DIR}/kernel/*.hpp")
 
-add_executable(kernel ${SRC_FILES} ${ARCH_SRC_FILES})
+add_executable(kernel ${SRC_FILES} ${ARCH_SRC_FILES} ${HEADER_FILES})
 
 target_include_directories(kernel PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 

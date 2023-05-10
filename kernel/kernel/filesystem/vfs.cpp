@@ -36,19 +36,17 @@ Node* VFS::mkdir(const String<>& path) {
     dirNode->parent = parentNode;
     parentNode->children.push_back(dirNode);
 
-    parentNode->writeDir(
-        Vector<DirEntry>(1, DirEntry::fromStringName(dirName, dirNode->resource.inode)));
+    parentNode->writeDir(Vector<DirEntry>(1, DirEntry::fromStringName(dirName, dirNode->resource.inode)));
     return dirNode;
 }
 
 Node* VFS::mnt(const String<>& path, FileSystem* fs, int inode) {
-    ScopedLock lock(mutex);
-
     auto node = openNode(path);
     if (node) {
         printf("Node already exists, can't mount here: '%s'\n", path.c_str());
         return nullptr;
     }
+    ScopedLock lock(mutex);
 
     auto parentPath = path;
     String dirName = "";
@@ -89,8 +87,7 @@ Node* VFS::mkfile(const String<>& path) {
     fileNode->parent = parentNode;
     parentNode->children.push_back(fileNode);
 
-    parentNode->writeDir(
-        Vector<DirEntry>(1, DirEntry::fromStringName(fileName, fileNode->resource.inode)));
+    parentNode->writeDir(Vector<DirEntry>(1, DirEntry::fromStringName(fileName, fileNode->resource.inode)));
     return fileNode;
 }
 

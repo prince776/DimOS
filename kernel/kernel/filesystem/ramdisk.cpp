@@ -176,7 +176,7 @@ int RamDisk::getFreeINode() noexcept {
     return -1;
 }
 
-void RamDisk::freeINode(int inode) { nodes[inode].type = vfs::NodeType::INVALID; }
+void RamDisk::freeINode(int inode) noexcept { nodes[inode].type = vfs::NodeType::INVALID; }
 
-void RamDisk::freeDataBlock(int block) { dataBitset[block] = 0; }
+void RamDisk::freeDataBlock(int block) noexcept { dataBitset[block] = 0; }
 } // namespace fs
