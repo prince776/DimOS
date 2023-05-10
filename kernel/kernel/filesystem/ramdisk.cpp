@@ -30,7 +30,10 @@ void RamDisk::create(vfs::Node& vfsNode, vfs::NodeType type) {
     memset(buffer, 0, BlockSize);
     write(vfsNode.resource, 0, BlockSize, buffer);
     node.size = 0;
-    vfsNode.resource.size = 0;
+    if (type == vfs::NodeType::DIRECTORY) {
+        node.size = sizeof(DirHeader);
+    }
+    vfsNode.resource.size = node.size;
 }
 
 void RamDisk::remove(vfs::Node& vfsNode) {
@@ -80,6 +83,7 @@ int RamDisk::write(Resource& resource, uint32_t offset, uint32_t size, uint8_t* 
             }
             node->dataBlocks[node->blocksInUse] = (dataBlocks + newBlock);
             node->blocksInUse++;
+            dataBitset[newBlock] = 1;
         }
         for (int j = prevDoneInBlock; j < BlockSize && bytesWritten < size; j++) {
             node->dataBlocks[i]->data[j] = buffer[bytesWritten++];
@@ -100,6 +104,11 @@ Vector<vfs::DirEntry> RamDisk::readDir(const vfs::Node& vfsNode) const {
 
     void* buffer = malloc(node->size);
     read(vfsNode.resource, 0, node->size, (uint8_t*)buffer);
+
+    int entryCount = ((DirHeader*)buffer)->entryCnt;
+    if (!entryCount) {
+        return {};
+    }
 
     Vector<vfs::DirEntry> res(((DirHeader*)buffer)->entryCnt);
     buffer += sizeof(DirHeader);
@@ -130,6 +139,11 @@ void RamDisk::writeDir(vfs::Node& vfsNode, const Vector<vfs::DirEntry>& entries)
     auto dataSize = entries.size() * sizeof(vfs::DirEntry);
 
     write(vfsNode.resource, node->size, dataSize, (uint8_t*)data);
+
+    DirHeader header{};
+    read(vfsNode.resource, 0, sizeof(header), (uint8_t*)&header);
+    header.entryCnt += entries.size();
+    write(vfsNode.resource, 0, sizeof(header), (uint8_t*)&header);
 }
 
 // TODO: FIX WRITING and REMOVING DIR ENTRY
@@ -176,7 +190,7 @@ int RamDisk::getFreeINode() noexcept {
     return -1;
 }
 
-void RamDisk::freeINode(int inode) { nodes[inode].type = vfs::NodeType::INVALID; }
+void RamDisk::freeINode(int inode) noexcept { nodes[inode].type = vfs::NodeType::INVALID; }
 
-void RamDisk::freeDataBlock(int block) { dataBitset[block] = 0; }
+void RamDisk::freeDataBlock(int block) noexcept { dataBitset[block] = 0; }
 } // namespace fs

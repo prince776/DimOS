@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build",
+      "type": "shell",
+      "command": "bash",
+      "args": ["${workspaceFolder}/build.sh"]
+    },
+    {
+      "label": "Run",
+      "type": "shell",
+      "command": "bash",
+      "args": ["${workspaceFolder}/qemu.sh"]
+    },
+    {
+      "label": "Build and Run",
+      "type": "shell",
+      "command": "bash",
+      "args": ["${workspaceFolder}/all.sh"]
+    }
+  ]
+}

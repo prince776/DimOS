@@ -9,7 +9,7 @@
       "type": "lldb",
       "request": "custom",
       "targetCreateCommands": [
-        "target create ${workspaceFolder}/kernel/dimos.kernel"
+        "target create ${workspaceFolder}/sysroot/boot/dimos.kernel"
       ],
       "processCreateCommands": ["gdb-remote localhost:1234"]
     }

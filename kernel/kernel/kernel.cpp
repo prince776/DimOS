@@ -2,6 +2,7 @@
 #include <kernel/common.h>
 #include <kernel/concurrency/primitives.h>
 #include <kernel/debug.h>
+#include <kernel/devices/framebuffer.h>
 #include <kernel/devices/keyboard.h>
 #include <kernel/devices/pit.h>
 #include <kernel/filesystem/vfs.h>
@@ -23,15 +24,15 @@
 
 extern "C" void (*__init_array_start)(), (*__init_array_end)();
 
-volatile struct limine_terminal_request terminal_request = {.id = LIMINE_TERMINAL_REQUEST,
-                                                            .revision = 0};
+volatile struct limine_terminal_request terminal_request = {.id = LIMINE_TERMINAL_REQUEST, .revision = 0};
 
 static volatile limine_memmap_request memmap_request = {.id = LIMINE_MEMMAP_REQUEST, .revision = 0};
 
-static volatile limine_kernel_address_request kerenel_address_request = {
-    .id = LIMINE_KERNEL_ADDRESS_REQUEST, .revision = 0};
+static volatile limine_kernel_address_request kerenel_address_request = {.id = LIMINE_KERNEL_ADDRESS_REQUEST,
+                                                                         .revision = 0};
 
 static volatile limine_hhdm_request hhdm_request = {.id = LIMINE_HHDM_REQUEST, .revision = 0};
+
 char* limineMemTypeMap[] = {
     "USABLE",
     "RESERVED",
@@ -71,8 +72,8 @@ extern "C" void kernel_main(void) {
            physcialMemMap.totalSize);
     for (int i = 0; i < memArrLen; i++) {
         auto memEntry = memArr[i];
-        printf("Memory entry %d: base: %x length: %x type: %s\n", i, memEntry->base,
-               memEntry->length, limineMemTypeMap[memEntry->type]);
+        printf("Memory entry %d: base: %x length: %x type: %s\n", i, memEntry->base, memEntry->length,
+               limineMemTypeMap[memEntry->type]);
         if (memEntry->type == LIMINE_MEMMAP_USABLE) {
             physcialMemMap.availMemArrCnt++;
         }
@@ -97,8 +98,7 @@ extern "C" void kernel_main(void) {
     auto kernelAddr = kerenel_address_request.response;
     auto hhdmRes = hhdm_request.response;
     HHDMOffset = hhdmRes->offset;
-    printf("Kernel Addr-> Physical: %x Virtual: %x\n", kernelAddr->physical_base,
-           kernelAddr->virtual_base);
+    printf("Kernel Addr-> Physical: %x Virtual: %x\n", kernelAddr->physical_base, kernelAddr->virtual_base);
     printf("HHDM offset: %x\n", hhdmRes->offset);
     printf("----------------------------------------------------------------------"
            "--\n");
@@ -110,17 +110,23 @@ extern "C" void kernel_main(void) {
     printf("Memory Management System Activated!\n");
 
     // Intialize file system.
-    auto rdfs = demo::Terminal::createRamdisk(50, 50);
+    int deviceID = 1;
+    auto rdfs = demo::Terminal::createRamdisk(deviceID++, 50, 50);
     globalVFS = vfs::VFS((FileSystem*)&rdfs);
 
     // Initialize kernel thread related stuff in fs
     globalVFS.mkdir("/proc");
+    globalVFS.mkdir("/dev");
+
+    auto framebuffer = FramebuferDevice(deviceID++);
+    printf("Calling mnt");
+    globalVFS.mnt("/dev/fb", (FileSystem*)&framebuffer);
 
     // Initialize devices
     Keyboard::get().install();
 
     // Insert a finished thread that represents curr thread.
-    kthreads.push_back(kernel::Thread(0));
+    kthreads.push_back(kernel::Thread(nullptr));
     kthreads[0].state = TaskState::COMPLETED;
 
     auto terminal = demo::Terminal("prince");

@@ -45,7 +45,9 @@ class Terminal {
                 auto bytesRead = stdoutFD.read(DataChunkSize, (uint8_t*)buffer);
 
                 buffer[bytesRead] = '\0';
-                printf("%s", buffer);
+                for (int i = 0; i < bytesRead; i++) {
+                    printf("%c", buffer[i]);
+                }
             }
             printf("\n");
         }
@@ -75,6 +77,8 @@ class Terminal {
             fprint(cmd, currDir);
         } else if (bin == "help") {
             help(cmd, currDir);
+        } else if (bin == "stat") {
+            stat(cmd, currDir);
         } else {
             echo("Command doesn't exist, type help to get help");
         }
@@ -135,10 +139,10 @@ class Terminal {
         return line;
     }
 
-    static fs::RamDisk createRamdisk(int nodeCount, int blockCount) {
+    static fs::RamDisk createRamdisk(int deviceID, int nodeCount, int blockCount) {
         int dataBitsetSize = (blockCount + 7) / 8;
-        int size = sizeof(fs::RamDisk::Super) + sizeof(fs::RamDisk::Node) * nodeCount +
-                   dataBitsetSize + fs::RamDisk::BlockSize * blockCount;
+        int size = sizeof(fs::RamDisk::Super) + sizeof(fs::RamDisk::Node) * nodeCount + dataBitsetSize +
+                   fs::RamDisk::BlockSize * blockCount;
 
         void* ptr = malloc(size);
         memset(ptr, 0, size);
@@ -150,7 +154,7 @@ class Terminal {
         auto rdfs = fs::RamDisk(ptr, 1);
         auto tempNode = vfs::Node(nullptr);
         rdfs.create(tempNode, vfs::NodeType::DIRECTORY);
-        return fs::RamDisk(ptr, 1);
+        return fs::RamDisk(ptr, deviceID);
     }
 
   private:

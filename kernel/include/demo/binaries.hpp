@@ -132,4 +132,37 @@ inline void help(const Command& cmd, const String<>& currDir) {
     echo("Following commands are supported in this fake kernel space shell:\n");
     echo("ls, cd, help, pwd, cat, fprint, echo, mkdir, touch\n");
 }
+
+inline void stat(const Command& cmd, const String<>& currDir) {
+    if (cmd.args.size() != 2) {
+        echo("Bad arguments. Usage: stat <file/dir name>");
+        return;
+    }
+    auto path = formPath(currDir, cmd.args[1]);
+    auto node = globalVFS.openNode(path);
+
+    if (!node) {
+        echo("File/dir not found");
+        return;
+    }
+
+    echo("Type: ");
+    if (node->type == vfs::NodeType::DIRECTORY) {
+        echo("directory");
+    } else {
+        echo("file");
+    }
+    echo("\n");
+
+    echo("inode: ");
+    echo(stoi(node->resource.inode));
+    echo("\n");
+
+    echo("device:");
+    echo(stoi(node->resource.deviceID));
+    echo("\n");
+
+    echo("size: ");
+    echo(stoi(node->resource.size));
+}
 } // namespace

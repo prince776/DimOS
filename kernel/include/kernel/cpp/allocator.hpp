@@ -18,10 +18,10 @@ struct Blk {
  */
 template <typename Alloc>
 concept Allocator = requires(Alloc alloc, size_t size) {
-                        { alloc.allocate(size) } -> same_as<Blk>;
-                        { alloc.deallocate(Blk{nullptr, size}) };
-                        { alloc.owns(Blk{nullptr, size}) } -> same_as<bool>;
-                    };
+    { alloc.allocate(size) } -> same_as<Blk>;
+    { alloc.deallocate(Blk{nullptr, size}) };
+    { alloc.owns(Blk{nullptr, size}) } -> same_as<bool>;
+};
 
 template <Allocator alloc> class AllocatorTester {};
 class MockAllocator {
@@ -33,8 +33,7 @@ class MockAllocator {
 
 template <Allocator P, Allocator F> class FallbackAllocator {
   public:
-    FallbackAllocator(const P& primary, const F& fallback)
-        : primaryAlloc(primary), fallbackAlloc(fallback) {}
+    FallbackAllocator(const P& primary, const F& fallback) : primaryAlloc(primary), fallbackAlloc(fallback) {}
 
     Blk allocate(size_t size) {
         auto blk = primaryAlloc.allocate(size);
@@ -105,7 +104,13 @@ class Mallocator {
   public:
     Mallocator() = default;
 
-    Blk allocate(size_t size) { return Blk{malloc(size), size}; }
+    Blk allocate(size_t size) {
+        if (!size) {
+            return Blk{nullptr, 0};
+        }
+        return Blk{malloc(size), size};
+    }
+
     void deallocate(const Blk& blk) {
         if (blk.ptr) {
             free(blk.ptr);

@@ -10,10 +10,10 @@ TOOLCHAIN="${SCRIPT_DIR}/x86_64-elf-toolchain.cmake"
 
 BUILD_DIR="${SCRIPT_DIR}/build"
 
-cmake . -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN} -B ${BUILD_DIR}
+cmake . -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN} -DCMAKE_BUILD_TYPE=Debug -B ${BUILD_DIR}
 
 cd ${BUILD_DIR}
-make
+make VERBOSE=1
 cd ${SCRIPT_DIR}
 
 mkdir ${SYSROOT}/boot
