@@ -77,6 +77,8 @@ class Terminal {
             fprint(cmd, currDir);
         } else if (bin == "help") {
             help(cmd, currDir);
+        } else if (bin == "stat") {
+            stat(cmd, currDir);
         } else {
             echo("Command doesn't exist, type help to get help");
         }

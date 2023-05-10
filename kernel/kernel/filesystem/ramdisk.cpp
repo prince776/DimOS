@@ -139,6 +139,11 @@ void RamDisk::writeDir(vfs::Node& vfsNode, const Vector<vfs::DirEntry>& entries)
     auto dataSize = entries.size() * sizeof(vfs::DirEntry);
 
     write(vfsNode.resource, node->size, dataSize, (uint8_t*)data);
+
+    DirHeader header{};
+    read(vfsNode.resource, 0, sizeof(header), (uint8_t*)&header);
+    header.entryCnt += entries.size();
+    write(vfsNode.resource, 0, sizeof(header), (uint8_t*)&header);
 }
 
 // TODO: FIX WRITING and REMOVING DIR ENTRY
