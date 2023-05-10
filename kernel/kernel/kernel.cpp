@@ -6,6 +6,7 @@
 #include <kernel/devices/keyboard.h>
 #include <kernel/devices/pit.h>
 #include <kernel/filesystem/vfs.h>
+#include <kernel/gfx/fb.hpp>
 #include <kernel/isr.h>
 #include <kernel/limine.h>
 #include <kernel/memory/heap.h>
@@ -119,9 +120,11 @@ extern "C" void kernel_main(void) {
     globalVFS.mkdir("/dev");
 
     auto framebuffer = FramebuferDevice(deviceID++);
-    printf("Calling mnt");
     globalVFS.mnt("/dev/fb", (FileSystem*)&framebuffer);
+    gfx::FrameBuffer graphics(framebuffer.getWidth(), framebuffer.getHeight());
 
+    printf("Calling clrscr\n");
+    graphics.clscr(gfx::Color::red);
     // Initialize devices
     Keyboard::get().install();
 

@@ -20,6 +20,8 @@ FramebuferDevice::FramebuferDevice(int _deviceID) : deviceID(_deviceID) {
     fbSize = fb->width * fb->height * sizeof(uint32_t);
 
     fb_ptr = (uint32_t*)fb->address;
+
+    printf("framebuffer: w: %d, h: %d, pixelW: %d\n", fb->width, fb->height, fb->pitch / fb->width);
 }
 
 int FramebuferDevice::getIdx(int pixel) { return pixel * (fb->pitch / 4) + pixel; }

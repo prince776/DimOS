@@ -12,5 +12,10 @@ void init() {
 Heap::FreeList get() { return mallocHeap; }
 } // namespace MallocHeap
 
-extern "C" void* kmalloc(uint64_t size) { return mallocHeap.alloc(size); }
+extern "C" void* kmalloc(uint64_t size) {
+    printf("Allocating: %l\n", size);
+    auto res = mallocHeap.alloc(size);
+    printf("Allocated\n");
+    return res;
+}
 extern "C" void kfree(void* ptr) { return mallocHeap.free(ptr); }

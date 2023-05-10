@@ -126,6 +126,11 @@
 },
 {
   "directory": "/Users/prince/projects/DimOS/build/kernel",
+  "command": "/usr/local/homebrew/bin/x86_64-elf-g++ --sysroot=/Users/prince/projects/DimOS/sysroot  -I/Users/prince/projects/DimOS/kernel/include -I/Users/prince/projects/DimOS/libc/include -isystem /Users/prince/projects/DimOS/sysroot/include -Wall                -Wextra \t\t\t       -ffreestanding       -fno-stack-protector -fno-stack-check     -fno-lto             -fno-pie             -fno-pic             -m64                 -march=x86-64        -mabi=sysv           -mno-80387           -mno-mmx             -mno-sse             -mno-sse2            -mno-red-zone        -mcmodel=kernel      -MMD                  -std=c++20          -mgeneral-regs-only -fno-rtti           -fno-exceptions      -g -o CMakeFiles/kernel.dir/kernel/gfx/fb.cpp.obj -c /Users/prince/projects/DimOS/kernel/kernel/gfx/fb.cpp",
+  "file": "/Users/prince/projects/DimOS/kernel/kernel/gfx/fb.cpp"
+},
+{
+  "directory": "/Users/prince/projects/DimOS/build/kernel",
   "command": "/usr/local/homebrew/bin/x86_64-elf-g++ --sysroot=/Users/prince/projects/DimOS/sysroot  -I/Users/prince/projects/DimOS/kernel/include -I/Users/prince/projects/DimOS/libc/include -isystem /Users/prince/projects/DimOS/sysroot/include -Wall                -Wextra \t\t\t       -ffreestanding       -fno-stack-protector -fno-stack-check     -fno-lto             -fno-pie             -fno-pic             -m64                 -march=x86-64        -mabi=sysv           -mno-80387           -mno-mmx             -mno-sse             -mno-sse2            -mno-red-zone        -mcmodel=kernel      -MMD                  -std=c++20          -mgeneral-regs-only -fno-rtti           -fno-exceptions      -g -o CMakeFiles/kernel.dir/kernel/isr.cpp.obj -c /Users/prince/projects/DimOS/kernel/kernel/isr.cpp",
   "file": "/Users/prince/projects/DimOS/kernel/kernel/isr.cpp"
 },

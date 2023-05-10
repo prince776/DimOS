@@ -11,8 +11,7 @@ template <typename T, Allocator Alloc = Mallocator> class Vector {
         data = makeUnique<T[], Alloc>(allocator, capacity);
         fill(T{});
     }
-    Vector(size_t size, const T& val, Alloc allocator = {})
-        : m_size(size), capacity(size), allocator(allocator) {
+    Vector(size_t size, const T& val, Alloc allocator = {}) : m_size(size), capacity(size), allocator(allocator) {
         data = makeUnique<T[], Alloc>(allocator, capacity);
         fill(val);
     }
@@ -83,9 +82,7 @@ template <typename T, Allocator Alloc = Mallocator> class Vector {
     ForwardIterator<T> begin() noexcept { return ForwardIterator(&data[0]); }
     ForwardIterator<T> end() noexcept { return ForwardIterator(&data[0] + m_size); }
     const ForwardIterator<const T> begin() const noexcept { return ForwardIterator(&data[0]); }
-    const ForwardIterator<const T> end() const noexcept {
-        return ForwardIterator(&data[0] + m_size);
-    }
+    const ForwardIterator<const T> end() const noexcept { return ForwardIterator(&data[0] + m_size); }
 
     // Random access
     T& operator[](size_t idx) noexcept { return data[idx]; }
@@ -130,13 +127,13 @@ template <typename T, Allocator Alloc = Mallocator> class Vector {
 
     static const int npos = -1;
 
-  protected:
     void fill(const T& val) {
         for (size_t i = 0; i < m_size; i++) {
             data[i] = val;
         }
     }
 
+  protected:
     void realloc(size_t newSize, size_t newCapacity) {
         assert(newSize <= newCapacity);
 

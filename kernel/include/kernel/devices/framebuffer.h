@@ -15,6 +15,9 @@ class FramebuferDevice : public FileSystem {
     void removeDirEntry(vfs::Node& node, const vfs::DirEntry& entry) override;
     void populateVFSNode(vfs::Node& node, int inode) override;
 
+    int getWidth() { return fb->width; }
+    int getHeight() { return fb->height; }
+
   private:
     int getIdx(int pixel);
 
