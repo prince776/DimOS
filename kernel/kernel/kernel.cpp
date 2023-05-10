@@ -118,9 +118,9 @@ extern "C" void kernel_main(void) {
     globalVFS.mkdir("/proc");
     globalVFS.mkdir("/dev");
 
-    //    auto framebuffer = FramebuferDevice(deviceID++);
-    //    printf("Calling mnt");
-    //    globalVFS.mnt("/dev/fb", (FileSystem*)&framebuffer);
+    auto framebuffer = FramebuferDevice(deviceID++);
+    printf("Calling mnt");
+    globalVFS.mnt("/dev/fb", (FileSystem*)&framebuffer);
 
     // Initialize devices
     Keyboard::get().install();

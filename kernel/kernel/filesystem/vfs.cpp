@@ -155,7 +155,6 @@ Node* VFS::openNode(const String<>& path) {
     ScopedLock lock(mutex);
     auto node = resolvePath(path);
     if (!node) {
-        printf("Directory/file doesn't exist: %s\n", path.c_str());
         return nullptr;
     }
     return node;
@@ -192,7 +191,6 @@ Node* VFS::resolvePathUtil(Node* curr, const Vector<String<>>& pathEntries, int 
             return resolvePathUtil(child, pathEntries, idx + 1);
         }
     }
-    printf("Couldn't reolve path\n");
     return nullptr;
 }
 } // namespace vfs

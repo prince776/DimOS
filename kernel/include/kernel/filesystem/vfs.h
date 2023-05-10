@@ -24,8 +24,7 @@ class FileSystem {
     virtual void create(vfs::Node& node, vfs::NodeType type) = 0;
     virtual void remove(vfs::Node& node) = 0;
 
-    virtual int read(const Resource& resource, uint32_t offset, uint32_t size,
-                     uint8_t* buffer) const = 0;
+    virtual int read(const Resource& resource, uint32_t offset, uint32_t size, uint8_t* buffer) const = 0;
     virtual int write(Resource& resource, uint32_t offset, uint32_t size, uint8_t* buffer) = 0;
 
     virtual Vector<vfs::DirEntry> readDir(const vfs::Node& node) const = 0;
@@ -41,10 +40,10 @@ class Node {
   public:
     String<> name;
     NodeType type = NodeType::INVALID;
-    FileSystem* fileSystem;
-    Resource resource;
-    Vector<Node*> children;
-    Node* parent;
+    FileSystem* fileSystem{};
+    Resource resource{};
+    Vector<Node*> children{};
+    Node* parent{};
 
     Node(FileSystem* fs) : fileSystem(fs) {}
 

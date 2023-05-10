@@ -45,7 +45,9 @@ class Terminal {
                 auto bytesRead = stdoutFD.read(DataChunkSize, (uint8_t*)buffer);
 
                 buffer[bytesRead] = '\0';
-                printf("%s", buffer);
+                for (int i = 0; i < bytesRead; i++) {
+                    printf("%c", buffer[i]);
+                }
             }
             printf("\n");
         }
