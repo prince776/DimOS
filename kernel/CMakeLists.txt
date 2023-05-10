@@ -4,7 +4,7 @@ file(GLOB_RECURSE SRC_FILES "kernel/*.cpp")
 
 add_executable(kernel ${SRC_FILES} ${ARCH_SRC_FILES})
 
-target_include_directories(kernel PUBLIC ${CMAKE_CUURENT_LIST_DIR}/include)
+target_include_directories(kernel PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include)
 
 set(CMAKE_CXX_LINK_EXECUTABLE "x86_64-elf-gcc -static -z max-page-size=0x1000 -nostdlib -lgcc -nodefaultlibs -no-pie -T ${LINKER_SCRIPT} <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
