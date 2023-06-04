@@ -121,10 +121,10 @@ extern "C" void kernel_main(void) {
 
     auto framebuffer = FramebuferDevice(deviceID++);
     globalVFS.mnt("/dev/fb", (FileSystem*)&framebuffer);
-    gfx::FrameBuffer graphics(framebuffer.getWidth(), framebuffer.getHeight());
+    // gfx::FrameBuffer graphics(framebuffer.getWidth(), framebuffer.getHeight());
 
-    printf("Calling clrscr\n");
-    graphics.clscr(gfx::Color::red);
+    // printf("Calling clrscr\n");
+    // graphics.clscr(gfx::Color::red);
     // Initialize devices
     Keyboard::get().install();
 
