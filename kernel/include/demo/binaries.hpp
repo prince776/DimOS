@@ -1,4 +1,6 @@
 #pragma once
+#include "kernel/cpp/vector.hpp"
+#include "kernel/gfx/fb.hpp"
 #include <demo/common.hpp>
 #include <kernel/cpp/string.hpp>
 #include <kernel/devices/keyboard.h>
@@ -130,7 +132,7 @@ inline void fprint(const Command& cmd, const String<>& currDir) {
 inline void help(const Command& cmd, const String<>& currDir) {
     echo("Welcome to DimOS, will have a hard time finding a worse OS\n");
     echo("Following commands are supported in this fake kernel space shell:\n");
-    echo("ls, cd, help, pwd, cat, fprint, echo, mkdir, touch\n");
+    echo("snake, ls, cd, help, pwd, cat, fprint, echo, mkdir, touch\n");
 }
 
 inline void stat(const Command& cmd, const String<>& currDir) {
@@ -165,4 +167,85 @@ inline void stat(const Command& cmd, const String<>& currDir) {
     echo("size: ");
     echo(stoi(node->resource.size));
 }
+
+Keyboard::KeyCode getchNoWait() {
+    auto& stdinFileDescriptor = kernel::thisThread().fileDescriptors[0];
+    Keyboard::KeyCode key = Keyboard::KEY_UNKNOWN;
+    if (stdinFileDescriptor.canReadXbytes(sizeof(Keyboard::KeyCode))) {
+        stdinFileDescriptor.read(sizeof(key), (uint8_t*)&key);
+    }
+
+    return key;
+}
+
+inline void snake(const Command& cmd, const String<>& currDir) {
+    Keyboard::KeyCode input = Keyboard::KEY_UNKNOWN;
+
+    Vector<gfx::Vec2> snake(1, {80, 80});
+    gfx::Vec2 apple = {200, 200};
+    gfx::Vec2 vel = {0, 0};
+    int gridSize = 40;
+
+    gfx::Vec2 dim = {gridSize, gridSize};
+
+    gfx::FrameBuffer graphics(1280, 800);
+
+    while (input != Keyboard::KEY_ESCAPE) {
+        // game loop
+        graphics.clscr(gfx::Color::white);
+
+        // tick
+        input = getchNoWait();
+        switch (input) {
+        case Keyboard::KEY_W:
+            vel.x = 0;
+            vel.y = -gridSize;
+            break;
+        case Keyboard::KEY_S:
+            vel.x = 0;
+            vel.y = gridSize;
+            break;
+        case Keyboard::KEY_A:
+            vel.x = -gridSize;
+            vel.y = 0;
+            break;
+        case Keyboard::KEY_D:
+            vel.x = gridSize;
+            vel.y = 0;
+            break;
+        default:
+            break;
+        }
+
+        snake.reverse();
+        auto head = snake.back();
+        snake.push_back({head.x + vel.x, head.y + vel.y});
+
+        head = snake.back();
+        bool del = true;
+        if (head.x == apple.x && head.y == apple.y) {
+            del = false;
+            apple.x = (apple.x + snake.size() * 500) % 1280;
+            apple.x = (apple.x / gridSize) * gridSize;
+            apple.y = (apple.y + snake.size() * 500) % 800;
+            apple.y = (apple.y / gridSize) * gridSize;
+        }
+        snake.reverse();
+        if (del) {
+            snake.pop_back();
+        }
+
+        // render
+        graphics.fillRect(apple, dim, gfx::Color::red);
+        graphics.fillRect(snake[0], dim, gfx::Color(0, 165, 255));
+        for (size_t i = 1; i < snake.size(); i++) {
+            graphics.fillRect(snake[i], dim, gfx::Color::green);
+        }
+
+        for (volatile int i = 0; i < 5000000; i++)
+            ;
+    }
+    graphics.clscr(gfx::Color::black);
+}
+
 } // namespace

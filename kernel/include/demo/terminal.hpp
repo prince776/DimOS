@@ -79,6 +79,8 @@ class Terminal {
             help(cmd, currDir);
         } else if (bin == "stat") {
             stat(cmd, currDir);
+        } else if (bin == "snake") {
+            snake(cmd, currDir);
         } else {
             echo("Command doesn't exist, type help to get help");
         }

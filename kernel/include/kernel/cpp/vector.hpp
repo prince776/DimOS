@@ -126,7 +126,11 @@ template <typename T, Allocator Alloc = Mallocator> class Vector {
     }
 
     static const int npos = -1;
-
+    void reverse() {
+        for (int i = 0; i < size() / 2; i++) {
+            swap(data[i], data[size() - 1 - i]);
+        }
+    }
     void fill(const T& val) {
         for (size_t i = 0; i < m_size; i++) {
             data[i] = val;

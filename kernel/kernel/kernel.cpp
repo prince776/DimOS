@@ -123,8 +123,9 @@ extern "C" void kernel_main(void) {
     globalVFS.mnt("/dev/fb", (FileSystem*)&framebuffer);
     // gfx::FrameBuffer graphics(framebuffer.getWidth(), framebuffer.getHeight());
 
-    // printf("Calling clrscr\n");
     // graphics.clscr(gfx::Color::red);
+    // graphics.fillRect({500, 500}, {500, 500}, gfx::Color::blue);
+    // printf("screen width height: %d, %d", graphics.width, graphics.height);
     // Initialize devices
     Keyboard::get().install();
 

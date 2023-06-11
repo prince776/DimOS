@@ -6,9 +6,7 @@
 template <typename T, Allocator Alloc = Mallocator> class UniquePtr {
   public:
     UniquePtr() = default;
-    UniquePtr(T* ptr, Alloc& alloc) : allocator(alloc) {
-        data = Blk{.ptr = (void*)ptr, .size = sizeof(T)};
-    }
+    UniquePtr(T* ptr, Alloc& alloc) : allocator(alloc) { data = Blk{.ptr = (void*)ptr, .size = sizeof(T)}; }
     explicit UniquePtr(T* ptr) {
         data = Blk{.ptr = (void*)ptr, .size = sizeof(T)};
         allocator = Alloc{};

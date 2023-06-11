@@ -19,18 +19,19 @@ class FrameBuffer {
 
     void clscr(const Color& color = Color::black);
 
-    void putPixel(const Color& color);
+    void putPixel(const Vec2& pos, const Color& color);
 
-    void drawRect(const Vec2& pos, const Vec2& dimension, const Color& color);
+    // void drawRect(const Vec2& pos, const Vec2& dimension, const Color& color);
 
     void fillRect(const Vec2& pos, const Vec2& dimension, const Color& color);
 
-    void render();
+    uint32_t getOffset(const Vec2& pos) const;
+
+  public:
+    int width, height;
 
   private:
     vfs::VFS& vfs;
     vfs::Node* fbFile;
-    Vector<Color> buffer;
-    int width, height;
 };
 } // namespace gfx
